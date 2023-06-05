@@ -4,6 +4,7 @@ Summary
 Simulate an open jackson network 
 """
 import numpy as np
+import math as math
 
 from ..base import Model, Problem
 
@@ -51,13 +52,13 @@ class ExampleModel(Model):
             "arrival_alphas": {
                 "description": "The arrival rates to each queue from outside the network",
                 "datatype": list,
-                "default": [3,3,3,3,3]
+                "default": [1,1,1,1,1]
             },
-            # "service_mus": {
-            #     "description": "The mu values for the exponential service times ",
-            #     "datatype": list,
-            #     "default": [6,6,6,6,6]
-            # },
+            "service_mus": {
+                "description": "The mu values for the exponential service times ",
+                "datatype": list,
+                "default": [2,2,2,2,2]
+            },
             "routing_matrix": {
                 "description": "The routing matrix that describes the probabilities of moving to the next queue after leaving the current one",
                 "datatype": list,
@@ -105,6 +106,8 @@ class ExampleModel(Model):
         return self.factors["number_queues"]>=0
     def check_arrival_alphas(self):
         return self.factors["arrival_alphas"]>=0
+    def check_service_mus(self):
+        return self.factors["service_mus"]>=0
     def check_routing_matrix(self):
         transition_sums = list(map(sum, self.factors["routing_matrix"]))
         if all([len(row) == len(self.factors["routing_matrix"]) for row in self.factors["routing_matrix"]]) & \
@@ -135,25 +138,55 @@ class ExampleModel(Model):
 
     def replicate(self, rng_list):
         """
-        Evaluate a deterministic function f(x) with stochastic noise.
+        Simulate a single replication for the current model factors.
 
         Arguments
         ---------
-        rng_list : list of mrg32k3a.mrg32k3a.MRG32k3a objects
+        rng_list : [list]  [rng.mrg32k3a.MRG32k3a]
             rngs for model to use when simulating a replication
 
         Returns
         -------
         responses : dict
             performance measures of interest
-            "est_f(x)" = f(x) evaluated with stochastic noise
+            "average_queue_length": The time-average of queue length at each station
         """
-        # Designate random number generator for stochastic noise.
-        noise_rng = rng_list[0]
-        x = np.array(self.factors["x"])
-        fn_eval_at_x = np.linalg.norm(x) ** 2 + noise_rng.normalvariate()
+        # Designate random number generators.
+        arrival_rng = rng_list[0]
+        transition_rng = rng_list[1]
+        time_rng = rng_list[2]
 
-        # Compose responses and gradients.
-        responses = {"est_f(x)": fn_eval_at_x}
-        gradients = {"est_f(x)": {"x": tuple(2 * x)}}
-        return responses, gradients
+        # Initiate clock variables for statistics tracking and event handling.
+        clock = 0
+        previous_clock = 0
+        next_arrival = arrival_rng.expovariate(sum(self.factors["arrival_alphas"]))
+
+        # initialize list of queues
+        stations = range(self.factors["number_attractions"])
+
+        # create list of each station's next completion time and initialize to infinity.
+        completion_times = [math.inf for _ in range(self.factors["number_attractions"])]
+
+        # initialize list of each station's average queue length
+        time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
+        
+        # initialize the queue at each station
+        queue = [0 for _ in range(self.factors["number_queues"])]
+
+        # create external arrival probabilities for each attraction.
+        arrival_probabalities = [self.factors["arrival_alphas"][i] / sum(self.factors["arrival_alphas"]) for i in
+                                 self.factors["arrival_alphas"]]
+
+        # # initialize time average queue length
+        # in_system = 0
+        # time_average = 0
+        # cumulative_util = [0 for _ in range(self.factors["number_attractions"])]
+
+        # Run simulation over time horizon.
+        while min(next_arrival, min(completion_times)) < self.factors["t_end"]:
+            # Count number of customers on attractions and in queues
+            clock = min(next_arrival, min(completion_times))
+            for i in range(self.factors["number_queues"]):
+                time_sum_queue_length[i] += queue[i] * (clock - previous_clock)
+            
+            
