@@ -108,7 +108,7 @@ class ExampleModel(Model):
     def check_routing_matrix(self):
         transition_sums = list(map(sum, self.factors["routing_matrix"]))
         if all([len(row) == len(self.factors["routing_matrix"]) for row in self.factors["routing_matrix"]]) & \
-                all(transition_sums[i] + self.factors["departure_probabilities"][i] == 1 for i in range(self.factors["number_queues"])):
+                all(transition_sums[i] <= 1 for i in range(self.factors["number_queues"])):
             return True
         else:
             return False
@@ -118,13 +118,13 @@ class ExampleModel(Model):
         # else:
         #     return all([0 <= prob <= 1 for prob in self.factors["departure_probabilities"]])
     def check_t_end(self):
-        return ("to-do")
+        return self.factors["t_end"] >= 0
     def check_warm_up(self):
         # Assume f(x) can be evaluated at any x in R^d.
-        return "to-do"
+        return self.factors["warm_up"] >= 0
     def check_service_rates_capacity(self):
         # Assume f(x) can be evaluated at any x in R^d.
-        return 'to-do'
+        return self.factors["service_rates_capacity"] >= 0
     # def check_x(self):
     #     # Assume f(x) can be evaluated at any x in R^d.
     #     return True
