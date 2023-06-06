@@ -194,7 +194,7 @@ class ExampleModel(Model):
             for i in range(self.factors["number_queues"]):
                 time_sum_queue_length[i] += queue[i] * (clock - previous_clock)
             
-    def replicate_steady_state(self, rng_list):
+    def replicate_steady_state(self,rng_list):
         """
         Simulate a single replication for the current model factors.
 
@@ -202,13 +202,13 @@ class ExampleModel(Model):
         ---------
         rng_list : [list]  [rng.mrg32k3a.MRG32k3a]
             rngs for model to use when simulating a replication
-            uses geometric rng
-
+        
         Returns
         -------
         responses : dict
             performance measures of interest
-            "average_queue_length": The time-average of queue length at each station
+            "average_queue_length": The time-average of queue length at each station calculated from geometric random variable 
+            "average_queue_length_tested": The expected queue length at each station calculated from geometric steady state
         """    
         #calculate lambdas
         lambdas = []
