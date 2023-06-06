@@ -97,10 +97,15 @@ class ExampleModel(Model):
             # "departure_probabilities": self.check_departure_probabilities,
             "t_end": self.check_t_end,
             "warm_up": self.check_warm_up,
-            "service_rates_capacity": self.check_service_rates_capacity
+            "service_rates_capacity": self.check_service_rates_capacity,
+            "feasibility" : self.check_feasibility
         }
         # Set factors of the simulation model.
         super().__init__(fixed_factors)
+
+    def check_feasibility(self):
+        return (np.invert(np.identity(self.factor["number_queues"]) - self.factors["routing_matrix"].T) 
+                * self.factors["arrival_alphas"] < self.factors["service_mus"])
 
     def check_number_queues(self):
         return self.factors["number_queues"]>=0
@@ -189,4 +194,30 @@ class ExampleModel(Model):
             for i in range(self.factors["number_queues"]):
                 time_sum_queue_length[i] += queue[i] * (clock - previous_clock)
             
-            
+    def replicate_steady_state(self, rng_list):
+        """
+        Simulate a single replication for the current model factors.
+
+        Arguments
+        ---------
+        rng_list : [list]  [rng.mrg32k3a.MRG32k3a]
+            rngs for model to use when simulating a replication
+            uses geometric rng
+
+        Returns
+        -------
+        responses : dict
+            performance measures of interest
+            "average_queue_length": The time-average of queue length at each station
+        """    
+        #calculate lambdas
+        lambdas = []
+        for j in range(self.factors["number_queues"]):
+            lambdas[j] = (self.factors["arrival_alphas"] + 
+                          sum(self.factors["routing_matrix"][i][j] * self.factors["service_mus"][i] for i in self.factors["number_queues"]))
+        #calculate rho variables for geometric
+        rho = lambdas/self.factors["service"]
+        #calculate expected value of queue length as rho/(1-rho)
+        expected_queue_length = rho/(1-rho)
+
+        return expected_queue_length
