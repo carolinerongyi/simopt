@@ -110,9 +110,15 @@ class ExampleModel(Model):
     def check_number_queues(self):
         return self.factors["number_queues"]>=0
     def check_arrival_alphas(self):
-        return self.factors["arrival_alphas"]>=0
+        for i in range(self.factors["number_queues"]):
+            if self.factors["arrival_alphas"][i]<0:
+                return False
+        return True
     def check_service_mus(self):
-        return self.factors["service_mus"]>=0
+        for i in range(self.factors["number_queues"]):
+            if self.factors["service_mus"][i]<0:
+                return False
+        return True
     def check_routing_matrix(self):
         transition_sums = list(map(sum, self.factors["routing_matrix"]))
         if all([len(row) == len(self.factors["routing_matrix"]) for row in self.factors["routing_matrix"]]) & \
@@ -120,11 +126,6 @@ class ExampleModel(Model):
             return True
         else:
             return False
-    # def check_departure_probabilities(self):
-        # if len(self.factors["departure_probabilities"]) != self.factors["number_queues"]:
-        #     return False
-        # else:
-        #     return all([0 <= prob <= 1 for prob in self.factors["departure_probabilities"]])
     def check_t_end(self):
         return self.factors["t_end"] >= 0
     def check_warm_up(self):
@@ -133,13 +134,10 @@ class ExampleModel(Model):
     def check_service_rates_capacity(self):
         # Assume f(x) can be evaluated at any x in R^d.
         return self.factors["service_rates_capacity"] >= 0
-    # def check_x(self):
-    #     # Assume f(x) can be evaluated at any x in R^d.
-    #     return True
 
 
     def check_simulatable_factors(self):
-        return True
+        return True # ??
 
     def replicate(self, rng_list):
         """
@@ -164,10 +162,10 @@ class ExampleModel(Model):
         # Initiate clock variables for statistics tracking and event handling.
         clock = 0
         previous_clock = 0
-        next_arrival = arrival_rng.expovariate(sum(self.factors["arrival_alphas"]))
 
-        # initialize list of queues
-        stations = range(self.factors["number_attractions"])
+        # Generate all interarrival, network routes, and service times before the simulation run.
+        next_arrivals = [arrival_rng.expovariate(self.factors["arrival_alphas"][i])
+                         for i in range(self.factors["number_queues"])]
 
         # create list of each station's next completion time and initialize to infinity.
         completion_times = [math.inf for _ in range(self.factors["number_attractions"])]
@@ -176,25 +174,53 @@ class ExampleModel(Model):
         time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
         
         # initialize the queue at each station
-        queue = [0 for _ in range(self.factors["number_queues"])]
-
-        # create external arrival probabilities for each attraction.
-        arrival_probabalities = [self.factors["arrival_alphas"][i] / sum(self.factors["arrival_alphas"]) for i in
-                                 self.factors["arrival_alphas"]]
-
-        # # initialize time average queue length
-        # in_system = 0
-        # time_average = 0
-        # cumulative_util = [0 for _ in range(self.factors["number_attractions"])]
+        queues = [0 for _ in range(self.factors["number_queues"])]
 
         # Run simulation over time horizon.
-        while min(next_arrival, min(completion_times)) < self.factors["t_end"]:
-            # Count number of customers on attractions and in queues
-            clock = min(next_arrival, min(completion_times))
-            for i in range(self.factors["number_queues"]):
-                time_sum_queue_length[i] += queue[i] * (clock - previous_clock)
-            
-    def replicate_steady_state(self,rng_list):
+        while clock < self.factors["t_end"]:
+
+            next_arrival = min(next_arrivals)
+            next_completion = min(next_completion)
+
+            # updated response
+            clock = min(next_arrival, next_completion)
+            for i in range(self.factors['number_queues']):
+                time_sum_queue_length += queues[i] * (clock - previous_clock)
+
+            previous_clock = clock
+
+            if next_arrival < next_completion: # next event is an arrival
+                station = next_arrivals.index(next_arrival)
+                queues[station] += 1
+                next_arrivals[station] += arrival_rng.expovariate(self.factors["arrival_alphas"][station])
+                if queues[station] == 1:
+                    completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
+            else: # next event is a departure
+                station = next_completion.index(next_completion)
+                queues[station] -= 1
+                if queues[station] > 0:
+                    completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
+                else:
+                    completion_times[station] = math.inf
+                
+                # schedule where the customer will go next
+                prob = transition_rng.random()
+                
+                if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
+                    next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
+                    queues[next_station] += 1
+                    if queues[next_station] == 1:
+                        completion_times[next_station] = clock + time_rng.expovariate(self.factors["service_mus"][next_station])
+
+                
+        # end of simulation
+        # calculate average queue length
+        average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
+
+        # what is g
+        return {"average_queue_length": average_queue_length}
+
+    def replicate_steady_state(self, rng_list):
         """
         Simulate a single replication for the current model factors.
 
@@ -202,13 +228,13 @@ class ExampleModel(Model):
         ---------
         rng_list : [list]  [rng.mrg32k3a.MRG32k3a]
             rngs for model to use when simulating a replication
-        
+            uses geometric rng
+
         Returns
         -------
         responses : dict
             performance measures of interest
-            "average_queue_length": The time-average of queue length at each station calculated from geometric random variable 
-            "average_queue_length_tested": The expected queue length at each station calculated from geometric steady state
+            "average_queue_length": The time-average of queue length at each station
         """    
         #calculate lambdas
         lambdas = []
