@@ -29,6 +29,11 @@ from mrg32k3a.mrg32k3a import MRG32k3a
 
 # Working example for MM1 model.
 # -----------------------------------------------
+import sys
+  
+# # Insert the path of modules folder 
+sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
+  
 from simopt.models.openjackson import OpenJackson
 # fixed_factors = {"lambda": 3.0, "mu": 8.0}
 fixed_factors = {}
