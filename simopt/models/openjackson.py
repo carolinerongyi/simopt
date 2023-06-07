@@ -40,7 +40,7 @@ class OpenJackson(Model):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "OPENJACKSON"
-        self.n_rngs = 2
+        self.n_rngs = 4
         self.n_responses = 1
         self.factors = fixed_factors
         self.specifications = {
@@ -243,7 +243,21 @@ class OpenJackson(Model):
                           sum(self.factors["routing_matrix"][i][j] * self.factors["service_mus"][i] for i in self.factors["number_queues"]))
         #calculate rho variables for geometric
         rho = lambdas/self.factors["service"]
+
+        # Run a simulation creating queue lengths at each time that are generated as random geometric variables
+        queue_rng = rng_list[3] #
+        simtime = self.factors["t_end"] - self.factors["T"] # Time where simulations collect data
+
+        clock = 0
+        sum_queues = np.zeroes(self.factors["number_queues"])
+
+        while clock < simtime:
+            for i in self.factors["number_queues"]:
+                sum_queues[i] = sum_queues[i] + queue_rng.geometric(rho[i])
+            clock += 1
+        sim_queue_len = sum_queues/simtime
+
         #calculate expected value of queue length as rho/(1-rho)
         expected_queue_length = rho/(1-rho)
 
-        return expected_queue_length
+        return expected_queue_length, sim_queue_len
