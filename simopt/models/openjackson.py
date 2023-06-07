@@ -8,7 +8,7 @@ import math as math
 
 from ..base import Model, Problem
 
-class ExampleModel(Model):
+class OpenJackson(Model):
     """
     A model of an open jackson network .
 

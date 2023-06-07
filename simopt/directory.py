@@ -31,6 +31,8 @@ from .models.paramesti import ParameterEstimation, ParamEstiMaxLogLik
 from .models.fixedsan import FixedSAN, FixedSANLongestPath
 from .models.network import Network, NetworkMinTotalCost
 from .models.amusementpark import AmusementPark, AmusementParkMinDepart
+from .models.openjackson import OpenJackson
+
 # directory dictionaries
 solver_directory = {
     "ASTRODF": ASTRODF,
@@ -117,7 +119,8 @@ model_directory = {
     "PARAMESTI": ParameterEstimation,
     "FIXEDSAN": FixedSAN,
     "NETWORK": Network,
-    "AMUSEMENTPARK": AmusementPark
+    "AMUSEMENTPARK": AmusementPark,
+    "OPENJACKSON": OpenJackson
 }
 model_unabbreviated_directory = {
     "Min Deterministic Function + Noise (SUCG)": "EXAMPLE",
