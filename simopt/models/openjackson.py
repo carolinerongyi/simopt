@@ -342,7 +342,7 @@ class OpenJackson(Problem):
         self.n_objectives = 1
         self.n_stochastic_constraints = 0
         self.minmax = (-1,)
-        self.constraint_type = "unconstrained"
+        self.constraint_type = "deterministic"
         self.variable_type = "continuous"
         self.gradient_available = True
         self.model_default_factors = {}
@@ -353,7 +353,8 @@ class OpenJackson(Problem):
             "initial_solution": {
                 "description": "initial solution",
                 "datatype": tuple,
-                "default": (2.0, 2.0, 2.0, 2.0, 2.0)
+                # ask about this
+                "default": (30,30,20,10,10)
             },
             "budget": {
                 "description": "max # of replications for a solver to take",
@@ -367,13 +368,12 @@ class OpenJackson(Problem):
         }
         super().__init__(fixed_factors, model_fixed_factors)
         self.model = OpenJackson(self.model_fixed_factors)
-        self.dim = len(self.factors["initial_solution"])
-        self.lower_bounds = (-np.inf,) * self.dim
-        self.upper_bounds = (np.inf,) * self.dim
+        self.dim = self.model.factors["number_queues"]
+        self.lower_bounds = tuple(0 for _ in range(self.model.factors["number_queues"]))
+        self.upper_bounds = tuple(self.model.factors["service_rates_capacity"] for _ in range(self.model.factors["number_attractions"]))
         # Instantiate model with fixed factors and overwritten defaults.
-        self.model = OpenJackson(self.model_fixed_factors)
-        self.optimal_value = (0,)  # Change if f is changed.
-        self.optimal_solution = (0,) * self.dim  # Change if f is changed.
+        # self.optimal_value = (0,)  # Change if f is changed.
+        # self.optimal_solution = (0,) * self.dim  # Change if f is changed.
 
 
     def vector_to_factor_dict(self, vector):
@@ -391,7 +391,7 @@ class OpenJackson(Problem):
             dictionary with factor keys and associated values
         """
         factor_dict = {
-            "x": vector[:]
+            "service_mus": vector[:]
         }
         return factor_dict
 
@@ -410,7 +410,7 @@ class OpenJackson(Problem):
         vector : tuple
             vector of values associated with decision variables
         """
-        vector = tuple(factor_dict["x"])
+        vector = tuple(factor_dict["service_mus"])
         return vector
 
     def response_dict_to_objectives(self, response_dict):
@@ -428,7 +428,7 @@ class OpenJackson(Problem):
         objectives : tuple
             vector of objectives
         """
-        objectives = (response_dict["est_f(x)"],)
+        objectives = (sum(response_dict["average_queue_length"]),)
         return objectives
 
     def response_dict_to_stoch_constraints(self, response_dict):
@@ -508,7 +508,7 @@ class OpenJackson(Problem):
         """
         # Superclass method will check box constraints.
         # Can add other constraints here.
-        return super().check_deterministic_constraints(x)
+        return super().check_deterministic_constraints(x) # ask about it
 
     def get_random_solution(self, rand_sol_rng):
         """
@@ -525,5 +525,8 @@ class OpenJackson(Problem):
             vector of decision variables
         """
         # x = tuple([rand_sol_rng.uniform(-2, 2) for _ in range(self.dim)])
-        x = tuple(rand_sol_rng.mvnormalvariate(mean_vec=np.zeros(self.dim), cov=np.eye(self.dim), factorized=False))
+        x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
+                                                               summation=self.model.factors['service_rates_capacity'],
+                                                               with_zero=False
+                                                               )
         return x
