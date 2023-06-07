@@ -260,73 +260,80 @@ class OpenJackson(Model):
         expected_queue_length = rho/(1-rho)
 
         return {"expexted que length" :expected_queue_length}, {"simulated geo que length" : sim_queue_len}
-    
-    class OpenJackson(Problem):
-        """
-        Base class to implement simulation-optimization problems.
 
-        Attributes
-        ----------
-        name : string
-            name of problem
-        dim : int
-            number of decision variables
-        n_objectives : int
-            number of objectives
-        n_stochastic_constraints : int
-            number of stochastic constraints
-        minmax : tuple of int (+/- 1)
-            indicator of maximization (+1) or minimization (-1) for each objective
-        constraint_type : string
-            description of constraints types:
-                "unconstrained", "box", "deterministic", "stochastic"
-        variable_type : string
-            description of variable types:
-                "discrete", "continuous", "mixed"
-        lower_bounds : tuple
-            lower bound for each decision variable
-        upper_bounds : tuple
-            upper bound for each decision variable
-        gradient_available : bool
-            indicates if gradient of objective function is available
-        optimal_value : tuple
-            optimal objective function value
-        optimal_solution : tuple
-            optimal solution
-        model : Model object
-            associated simulation model that generates replications
-        model_default_factors : dict
-            default values for overriding model-level default factors
-        model_fixed_factors : dict
-            combination of overriden model-level factors and defaults
-        model_decision_factors : set of str
-            set of keys for factors that are decision variables
-        rng_list : list of mrg32k3a.mrg32k3a.MRG32k3a objects
-            list of RNGs used to generate a random initial solution
-            or a random problem instance
-        factors : dict
-            changeable factors of the problem
-                initial_solution : tuple
-                    default initial solution from which solvers start
-                budget : int > 0
-                    max number of replications (fn evals) for a solver to take
-        specifications : dict
-            details of each factor (for GUI, data validation, and defaults)
 
-        Arguments
-        ---------
-        name : str
-            user-specified name for problem
-        fixed_factors : dict
-            dictionary of user-specified problem factors
-        model_fixed factors : dict
-            subset of user-specified non-decision factors to pass through to the model
+"""
+Summary
+-------
+Minimize the expected total number of jobs in the system at a time
+"""
 
-        See also
-        --------
-        base.Problem
-        """
-    def __init__(self, name="EXAMPLE-1", fixed_factors=None, model_fixed_factors=None):
+class OpenJackson(Problem):
+    """
+    Class to Open Jackson simulation-optimization problems.
+
+    Attributes
+    ----------
+    name : string
+        name of problem
+    dim : int
+        number of decision variables
+    n_objectives : int
+        number of objectives
+    n_stochastic_constraints : int
+        number of stochastic constraints
+    minmax : tuple of int (+/- 1)
+        indicator of maximization (+1) or minimization (-1) for each objective
+    constraint_type : string
+        description of constraints types:
+            "unconstrained", "box", "deterministic", "stochastic"
+    variable_type : string
+        description of variable types:
+            "discrete", "continuous", "mixed"
+    lower_bounds : tuple
+        lower bound for each decision variable
+    upper_bounds : tuple
+        upper bound for each decision variable
+    gradient_available : bool
+        indicates if gradient of objective function is available
+    optimal_value : tuple
+        optimal objective function value
+    optimal_solution : tuple
+        optimal solution
+    model : Model object
+        associated simulation model that generates replications
+    model_default_factors : dict
+        default values for overriding model-level default factors
+    model_fixed_factors : dict
+        combination of overriden model-level factors and defaults
+    model_decision_factors : set of str
+        set of keys for factors that are decision variables
+    rng_list : list of mrg32k3a.mrg32k3a.MRG32k3a objects
+        list of RNGs used to generate a random initial solution
+        or a random problem instance
+    factors : dict
+        changeable factors of the problem
+            initial_solution : tuple
+                default initial solution from which solvers start
+            budget : int > 0
+                max number of replications (fn evals) for a solver to take
+    specifications : dict
+        details of each factor (for GUI, data validation, and defaults)
+
+    Arguments
+    ---------
+    name : str
+        user-specified name for problem
+    fixed_factors : dict
+        dictionary of user-specified problem factors
+    model_fixed factors : dict
+        subset of user-specified non-decision factors to pass through to the model
+
+    See also
+    --------
+    base.Problem
+    """
+    def __init__(self, name="OPENJACKSON-1", fixed_factors=None, model_fixed_factors=None):
         if fixed_factors is None:
             fixed_factors = {}
         if model_fixed_factors is None:
@@ -340,13 +347,13 @@ class OpenJackson(Model):
         self.gradient_available = True
         self.model_default_factors = {}
         self.model_fixed_factors = {}
-        self.model_decision_factors = {"x"}
+        self.model_decision_factors = {"service_mus"}
         self.factors = fixed_factors
         self.specifications = {
             "initial_solution": {
                 "description": "initial solution",
                 "datatype": tuple,
-                "default": (2.0, 2.0)
+                "default": (2.0, 2.0, 2.0, 2.0, 2.0)
             },
             "budget": {
                 "description": "max # of replications for a solver to take",
@@ -359,6 +366,7 @@ class OpenJackson(Model):
             "budget": self.check_budget
         }
         super().__init__(fixed_factors, model_fixed_factors)
+        self.model = OpenJackson(self.model_fixed_factors)
         self.dim = len(self.factors["initial_solution"])
         self.lower_bounds = (-np.inf,) * self.dim
         self.upper_bounds = (np.inf,) * self.dim
