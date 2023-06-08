@@ -172,12 +172,12 @@ class OpenJackson(Model):
         while clock < self.factors["t_end"]:
 
             next_arrival = min(next_arrivals)
-            next_completion = min(next_completion)
+            next_completion = min(completion_times)
 
             # updated response
             clock = min(next_arrival, next_completion)
             for i in range(self.factors['number_queues']):
-                time_sum_queue_length += queues[i] * (clock - previous_clock)
+                time_sum_queue_length[i] += queues[i] * (clock - previous_clock)
 
             previous_clock = clock
 
@@ -188,7 +188,7 @@ class OpenJackson(Model):
                 if queues[station] == 1:
                     completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
             else: # next event is a departure
-                station = next_completion.index(next_completion)
+                station = completion_times.index(next_completion)
                 queues[station] -= 1
                 if queues[station] > 0:
                     completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
@@ -208,9 +208,10 @@ class OpenJackson(Model):
         # end of simulation
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
-
-        # what is g
-        return {"average_queue_length": average_queue_length}
+        responses = {"average_queue_length": average_queue_length}
+        gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in
+                     responses}
+        return responses, gradients
 
     def replicate_steady_state(self, rng_list):
         """
