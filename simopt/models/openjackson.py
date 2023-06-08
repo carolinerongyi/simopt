@@ -57,7 +57,7 @@ class OpenJackson(Model):
             "service_mus": {
                 "description": "The mu values for the exponential service times ",
                 "datatype": list,
-                "default": [2,2,2,2,2]
+                "default": [30,30,20,10,10]
             },
             "routing_matrix": {
                 "description": "The routing matrix that describes the probabilities of moving to the next queue after leaving the current one",
@@ -94,11 +94,11 @@ class OpenJackson(Model):
             "number_queues": self.check_number_queues,
             "arrival_alphas": self.check_arrival_alphas,
             "routing_matrix": self.check_routing_matrix,
+            "service_mus": self.check_service_mus,
             # "departure_probabilities": self.check_departure_probabilities,
             "t_end": self.check_t_end,
             "warm_up": self.check_warm_up,
             "service_rates_capacity": self.check_service_rates_capacity,
-            "feasibility" : self.check_feasibility
         }
         # Set factors of the simulation model.
         super().__init__(fixed_factors)
@@ -108,15 +108,9 @@ class OpenJackson(Model):
     def check_number_queues(self):
         return self.factors["number_queues"]>=0
     def check_arrival_alphas(self):
-        for i in range(self.factors["number_queues"]):
-            if self.factors["arrival_alphas"][i]<0:
-                return False
-        return True
+        return all(x >= 0 for x in self.factors["arrival_alphas"])
     def check_service_mus(self):
-        for i in range(self.factors["number_queues"]):
-            if self.factors["service_mus"][i]<0:
-                return False
-        return True
+        return all(x >= 0 for x in self.factors["service_mus"])
     def check_routing_matrix(self):
         transition_sums = list(map(sum, self.factors["routing_matrix"]))
         if all([len(row) == len(self.factors["routing_matrix"]) for row in self.factors["routing_matrix"]]) & \
@@ -135,8 +129,7 @@ class OpenJackson(Model):
 
 
     def check_simulatable_factors(self):
-        return (np.invert(np.identity(self.factor["number_queues"]) - self.factors["routing_matrix"].T) 
-                * self.factors["arrival_alphas"] < self.factors["service_mus"])
+        return (sum(self.factors['service_mus']) <= self.factors['service_rates_capacity'])
 
     def replicate(self, rng_list):
         """
@@ -167,7 +160,7 @@ class OpenJackson(Model):
                          for i in range(self.factors["number_queues"])]
 
         # create list of each station's next completion time and initialize to infinity.
-        completion_times = [math.inf for _ in range(self.factors["number_attractions"])]
+        completion_times = [math.inf for _ in range(self.factors["number_queues"])]
 
         # initialize list of each station's average queue length
         time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
@@ -268,7 +261,7 @@ Summary
 Minimize the expected total number of jobs in the system at a time
 """
 
-class OpenJackson(Problem):
+class OpenJacksonMinQueue(Problem):
     """
     Class to Open Jackson simulation-optimization problems.
 
@@ -344,9 +337,8 @@ class OpenJackson(Problem):
         self.minmax = (-1,)
         self.constraint_type = "deterministic"
         self.variable_type = "continuous"
-        self.gradient_available = True
+        self.gradient_available = False
         self.model_default_factors = {}
-        self.model_fixed_factors = {}
         self.model_decision_factors = {"service_mus"}
         self.factors = fixed_factors
         self.specifications = {
@@ -359,7 +351,7 @@ class OpenJackson(Problem):
             "budget": {
                 "description": "max # of replications for a solver to take",
                 "datatype": int,
-                "default": 1000
+                "default": 100
             }
         }
         self.check_factor_list = {
@@ -370,10 +362,10 @@ class OpenJackson(Problem):
         self.model = OpenJackson(self.model_fixed_factors)
         self.dim = self.model.factors["number_queues"]
         self.lower_bounds = tuple(0 for _ in range(self.model.factors["number_queues"]))
-        self.upper_bounds = tuple(self.model.factors["service_rates_capacity"] for _ in range(self.model.factors["number_attractions"]))
+        self.upper_bounds = tuple(self.model.factors["service_rates_capacity"] for _ in range(self.model.factors["number_queues"]))
         # Instantiate model with fixed factors and overwritten defaults.
-        # self.optimal_value = (0,)  # Change if f is changed.
-        # self.optimal_solution = (0,) * self.dim  # Change if f is changed.
+        self.optimal_value = None  # Change if f is changed.
+        self.optimal_solution = None  # Change if f is changed.
 
 
     def vector_to_factor_dict(self, vector):
