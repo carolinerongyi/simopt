@@ -41,7 +41,7 @@ class OpenJackson(Model):
             fixed_factors = {}
         self.name = "OPENJACKSON"
         self.n_rngs = 4
-        self.n_responses = 1
+        self.n_responses = 2
         self.factors = fixed_factors
         self.specifications = {
             "number_queues": {
@@ -81,7 +81,7 @@ class OpenJackson(Model):
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
                 "datatype": int,
-                "default": 50
+                "default": 20
             },
             "service_rates_capacity": {
                 "description": "An upper bound on the total service rates",
@@ -144,7 +144,8 @@ class OpenJackson(Model):
         -------
         responses : dict
             performance measures of interest
-            "average_queue_length": The time-average of queue length at each station
+            "average queue length": The time-average of queue length at each station
+            "expected queue length": The expected queue length calculated using stationary distribution
         """
         # Designate random number generators.
         arrival_rng = rng_list[0]
@@ -167,6 +168,35 @@ class OpenJackson(Model):
         
         # initialize the queue at each station
         queues = [0 for _ in range(self.factors["number_queues"])]
+
+        while clock < self.factors['warm_up']:
+            next_arrival = min(next_arrivals)
+            next_completion = min(completion_times)
+            clock = min(next_arrival, next_completion)
+            if next_arrival < next_completion: # next event is an arrival
+                station = next_arrivals.index(next_arrival)
+                queues[station] += 1
+                next_arrivals[station] += arrival_rng.expovariate(self.factors["arrival_alphas"][station])
+                if queues[station] == 1:
+                    completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
+            else: # next event is a departure
+                station = completion_times.index(next_completion)
+                queues[station] -= 1
+                if queues[station] > 0:
+                    completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
+                else:
+                    completion_times[station] = math.inf
+                
+                # schedule where the customer will go next
+                prob = transition_rng.random()
+                
+                if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
+                    next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
+                    queues[next_station] += 1
+                    if queues[next_station] == 1:
+                        completion_times[next_station] = clock + time_rng.expovariate(self.factors["service_mus"][next_station])
+        clock = 0
+        previous_clock = 0
 
         # Run simulation over time horizon.
         while clock < self.factors["t_end"]:
@@ -218,7 +248,7 @@ class OpenJackson(Model):
         expected_queue_length = (rho)/(1-rho)
 
 
-        responses = {"average_queue_length": average_queue_length, "expected queue length" :expected_queue_length}
+        responses = {"average_queue_length": average_queue_length, "expected_queue_length" :expected_queue_length}
         gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in
                      responses}
         return responses, gradients
@@ -310,12 +340,16 @@ class OpenJacksonMinQueue(Problem):
         self.model_default_factors = {}
         self.model_decision_factors = {"service_mus"}
         self.factors = fixed_factors
+        
+        # set initial solution
+        constant = self.factors['service_rates_capacity']/sum(self.factors['service_alphas'])
+        initial_solution = [self.factors['service_alphas'][i]*constant for i in range(self.factors['number_queues'])]
+
         self.specifications = {
             "initial_solution": {
                 "description": "initial solution",
                 "datatype": tuple,
-                # ask about this
-                "default": (30,30,20,10,10)
+                "default": initial_solution
             },
             "budget": {
                 "description": "max # of replications for a solver to take",
@@ -488,6 +522,6 @@ class OpenJacksonMinQueue(Problem):
         # x = tuple([rand_sol_rng.uniform(-2, 2) for _ in range(self.dim)])
         x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
                                                                summation=self.model.factors['service_rates_capacity'],
-                                                               with_zero=False
+                                                               exact_sum=False
                                                                )
         return x

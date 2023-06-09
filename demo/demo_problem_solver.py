@@ -5,6 +5,8 @@ macroreplications of the solver on the problem.
 """
 
 import sys
+sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+
 import os.path as o
 import os
 sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
@@ -26,7 +28,7 @@ from simopt.experiment_base import ProblemSolver, read_experiment_results, post_
 # Example with random search solver on continuous newsvendor problem.
 # -----------------------------------------------
 solver_name = "RNDSRCH"  # Random search solver
-problem_name = "CNTNEWS-1"  # Continuous newsvendor problem
+problem_name = "OPENJACKSON-1"  # Continuous newsvendor problem
 # -----------------------------------------------
 
 print(f"Testing solver {solver_name} on problem {problem_name}.")
