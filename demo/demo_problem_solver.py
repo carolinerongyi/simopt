@@ -5,12 +5,13 @@ macroreplications of the solver on the problem.
 """
 
 import sys
-# sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
+sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
+# sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
 
 import os.path as o
 import os
 sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
-sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+
 
 # Import the ProblemSolver class and other useful functions
 from simopt.experiment_base import ProblemSolver, read_experiment_results, post_normalize, plot_progress_curves, plot_solvability_cdfs
