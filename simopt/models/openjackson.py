@@ -208,17 +208,7 @@ class OpenJackson(Model):
         # end of simulation
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
-
-        #calculate the steady state of the queues to check the simulation
-        #calculate lambdas
-        routing_matrix = np.asarray(self.factors["routing_matrix"])
-        lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
-        rho = lambdas/self.factors["service_mus"]
-        #calculate expected value of queue length as rho/(1-rho)
-        expected_queue_length = (rho)/(1-rho)
-
-
-        responses = {"average_queue_length": average_queue_length, "expected queue length" :expected_queue_length}
+        responses = {"average_queue_length": average_queue_length}
         gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in
                      responses}
         return responses, gradients
@@ -527,8 +517,9 @@ class OpenJacksonMinQueue(Problem):
         x : tuple
             vector of decision variables
         """
+        # x = tuple([rand_sol_rng.uniform(-2, 2) for _ in range(self.dim)])
         x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
                                                                summation=self.model.factors['service_rates_capacity'],
-                                                               exact_sum=False
+                                                               with_zero=False
                                                                )
         return x
