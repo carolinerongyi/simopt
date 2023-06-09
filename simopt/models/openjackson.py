@@ -253,7 +253,7 @@ class OpenJackson(Model):
         #calculate expected value of queue length as rho/(1-rho)
         expected_queue_length = rho/(1-rho)
 
-        return {"expected que length" :expected_queue_length}, {"simulated geo que length" : sim_queue_len}
+        return {"expexted que length" :expected_queue_length}, {"simulated geo que length" : sim_queue_len}
 
 
 """
