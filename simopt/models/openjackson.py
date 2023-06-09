@@ -485,9 +485,8 @@ class OpenJacksonMinQueue(Problem):
         x : tuple
             vector of decision variables
         """
-        # x = tuple([rand_sol_rng.uniform(-2, 2) for _ in range(self.dim)])
         x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
                                                                summation=self.model.factors['service_rates_capacity'],
-                                                               with_zero=False
+                                                               exact_sum=False
                                                                )
         return x
