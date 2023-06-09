@@ -76,12 +76,12 @@ class OpenJackson(Model):
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": list,
-                "default": 500
+                "default": 1000
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
                 "datatype": int,
-                "default": 20
+                "default": 50
             },
             "service_rates_capacity": {
                 "description": "An upper bound on the total service rates",
@@ -341,15 +341,12 @@ class OpenJacksonMinQueue(Problem):
         self.model_decision_factors = {"service_mus"}
         self.factors = fixed_factors
         
-        # set initial solution
-        constant = self.factors['service_rates_capacity']/sum(self.factors['service_alphas'])
-        initial_solution = [self.factors['service_alphas'][i]*constant for i in range(self.factors['number_queues'])]
 
         self.specifications = {
             "initial_solution": {
                 "description": "initial solution",
                 "datatype": tuple,
-                "default": initial_solution
+                "default": [20,20,20,20,20]
             },
             "budget": {
                 "description": "max # of replications for a solver to take",

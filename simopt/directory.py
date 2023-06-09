@@ -101,7 +101,7 @@ problem_unabbreviated_directory = {
     "Min Mean Longest Path for Fixed Stochastic Activity Network (SBCG)": FixedSANLongestPath,
     "Min Total Cost for Communication Networks System (SDCN)": NetworkMinTotalCost,
     "Min Total Departed Visitors for Amusement Park (SDDN)": AmusementParkMinDepart,
-    "Min Queue Length for Jackson Network ()": OpenJacksonMinQueue
+    "Min Queue Length for Open Jackson Network ()": OpenJacksonMinQueue
 }
 model_directory = {
     "EXAMPLE": ExampleModel,
@@ -146,5 +146,5 @@ model_unabbreviated_directory = {
     "Min Mean Longest Path for Fixed Stochastic Activity Network (SBCG)": "FIXEDSAN",
     "Min Total Cost for Communication Networks System (SDCN)": "NETWORK",
     "Min Total Departed Visitors for Amusement Park (SDDN)": "AMUSEMENTPARK",
-    "Min Queue Length for Jackson Network ()": "OPENJACKSON"
+    "Min Queue Length for Open Jackson Network ()": "OPENJACKSON"
 }
