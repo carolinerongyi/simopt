@@ -208,52 +208,20 @@ class OpenJackson(Model):
         # end of simulation
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
-        responses = {"average_queue_length": average_queue_length}
+
+        #calculate the steady state of the queues to check the simulation
+        #calculate lambdas
+        routing_matrix = np.asarray(self.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
+        rho = lambdas/self.factors["service_mus"]
+        #calculate expected value of queue length as rho/(1-rho)
+        expected_queue_length = (rho)/(1-rho)
+
+
+        responses = {"average_queue_length": average_queue_length, "expected queue length" :expected_queue_length}
         gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in
                      responses}
         return responses, gradients
-
-    def replicate_steady_state(self, rng_list):
-        """
-        Simulate a single replication for the current model factors.
-
-        Arguments
-        ---------
-        rng_list : [list]  [rng.mrg32k3a.MRG32k3a]
-            rngs for model to use when simulating a replication
-            uses geometric rng
-
-        Returns
-        -------
-        responses : dict
-            performance measures of interest
-            "average_queue_length": The time-average of queue length at each station
-        """    
-        #calculate lambdas
-        lambdas = []
-        for j in range(self.factors["number_queues"]):
-            lambdas[j] = (self.factors["arrival_alphas"] + 
-                          sum(self.factors["routing_matrix"][i][j] * self.factors["service_mus"][i] for i in self.factors["number_queues"]))
-        #calculate rho variables for geometric
-        rho = lambdas/self.factors["service"]
-
-        # Run a simulation creating queue lengths at each time that are generated as random geometric variables
-        queue_rng = rng_list[3] #
-        simtime = self.factors["t_end"] - self.factors["T"] # Time where simulations collect data
-
-        clock = 0
-        sum_queues = np.zeroes(self.factors["number_queues"])
-
-        while clock < simtime:
-            for i in self.factors["number_queues"]:
-                sum_queues[i] = sum_queues[i] + queue_rng.geometric(rho[i])
-            clock += 1
-        sim_queue_len = sum_queues/simtime
-
-        #calculate expected value of queue length as rho/(1-rho)
-        expected_queue_length = rho/(1-rho)
-
-        return {"expexted que length" :expected_queue_length}, {"simulated geo que length" : sim_queue_len}
 
 
 """
