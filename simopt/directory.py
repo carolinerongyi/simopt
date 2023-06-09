@@ -31,7 +31,7 @@ from .models.paramesti import ParameterEstimation, ParamEstiMaxLogLik
 from .models.fixedsan import FixedSAN, FixedSANLongestPath
 from .models.network import Network, NetworkMinTotalCost
 from .models.amusementpark import AmusementPark, AmusementParkMinDepart
-from .models.openjackson import OpenJackson
+from .models.openjackson import OpenJackson, OpenJacksonMinQueue
 
 # directory dictionaries
 solver_directory = {
@@ -75,7 +75,8 @@ problem_directory = {
     "PARAMESTI-1": ParamEstiMaxLogLik,
     "FIXEDSAN-1": FixedSANLongestPath,
     "NETWORK-1": NetworkMinTotalCost,
-    "AMUSEMENTPARK-1": AmusementParkMinDepart
+    "AMUSEMENTPARK-1": AmusementParkMinDepart,
+    "OPENJACKSON-1" : OpenJacksonMinQueue
 }
 
 problem_unabbreviated_directory = {
@@ -99,7 +100,8 @@ problem_unabbreviated_directory = {
     "Max Log Likelihood for Gamma Parameter Estimation (SBCN)": ParamEstiMaxLogLik,
     "Min Mean Longest Path for Fixed Stochastic Activity Network (SBCG)": FixedSANLongestPath,
     "Min Total Cost for Communication Networks System (SDCN)": NetworkMinTotalCost,
-    "Min Total Departed Visitors for Amusement Park (SDDN)": AmusementParkMinDepart
+    "Min Total Departed Visitors for Amusement Park (SDDN)": AmusementParkMinDepart,
+    "Min Queue Lengths in an Open Jackson Network": OpenJacksonMinQueue
 }
 model_directory = {
     "EXAMPLE": ExampleModel,
@@ -143,5 +145,6 @@ model_unabbreviated_directory = {
     "Max Log Likelihood for Gamma Parameter Estimation (SBCN)": "PARAMESTI",
     "Min Mean Longest Path for Fixed Stochastic Activity Network (SBCG)": "FIXEDSAN",
     "Min Total Cost for Communication Networks System (SDCN)": "NETWORK",
-    "Min Total Departed Visitors for Amusement Park (SDDN)": "AMUSEMENTPARK"
+    "Min Total Departed Visitors for Amusement Park (SDDN)": "AMUSEMENTPARK",
+    "Min Queue Lengths in an Open Jackson Network": "OPENJACKSON"
 }
