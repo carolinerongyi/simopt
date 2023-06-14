@@ -1,0 +1,175 @@
+./experiments/outputs/ASTRODF_on_OPENJACKSON-1.pickle
+Problem: OPENJACKSON-1
+Solver: ASTRODF
+
+Model Factors:
+	number_queues: 5
+	arrival_alphas: [5, 4, 3, 2, 1]
+	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0, 0.1, 0.3], [0.1, 0.1, 0.1, 0, 0.3], [0.1, 0.1, 0.1, 0.1, 0.2]]
+	t_end: 1000
+	warm_up: 50
+	service_rates_capacity: 100
+
+Problem Factors:
+	initial_solution: [20, 20, 20, 20, 20]
+	budget: 100
+
+Solver Factors:
+	crn_across_solns: True
+	eta_1: 0.1
+	eta_2: 0.8
+	gamma_1: 1.5
+	gamma_2: 0.5
+	lambda_min: 4
+	easy_solve: True
+	reuse_points: True
+	ps_sufficient_reduction: 0.1
+
+20 macroreplications were run.
+200 postreplications were run at each recommended solution.
+
+The initial solution is (20, 20, 20, 20, 20). Its estimated objective is 3.0284.
+The proxy optimal solution is (24.0006, 22.9455, 22.7499, 21.842, 21.905). Its estimated objective is 2.4715.
+200 postreplications were taken at x0 and x_star.
+
+Macroreplication Results:
+
+Macroreplication 1:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0417
+	Budget: 48	Recommended Solution: (21.5175, 21.1608, 21.0277, 20.9455, 20.8421)	Estimated Objective: 2.7869
+	Budget: 88	Recommended Solution: (23.7261, 23.0767, 21.9457, 22.6965, 22.1609)	Estimated Objective: 2.4893
+	Budget: 100	Recommended Solution: (23.7261, 23.0767, 21.9457, 22.6965, 22.1609)	Estimated Objective: 2.4893
+	The time taken to complete this macroreplication was 113.8 s.
+
+Macroreplication 2:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0384
+	Budget: 48	Recommended Solution: (21.502, 21.1295, 21.0497, 20.9647, 20.8634)	Estimated Objective: 2.7766
+	Budget: 88	Recommended Solution: (23.3139, 24.0792, 21.8588, 21.3233, 22.0588)	Estimated Objective: 2.5067
+	Budget: 100	Recommended Solution: (23.3139, 24.0792, 21.8588, 21.3233, 22.0588)	Estimated Objective: 2.5067
+	The time taken to complete this macroreplication was 115.33 s.
+
+Macroreplication 3:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0256
+	Budget: 48	Recommended Solution: (21.5474, 21.0699, 21.185, 20.8738, 20.7763)	Estimated Objective: 2.7729
+	Budget: 88	Recommended Solution: (24.0006, 22.9455, 22.7499, 21.842, 21.905)	Estimated Objective: 2.4673
+	Budget: 100	Recommended Solution: (24.0006, 22.9455, 22.7499, 21.842, 21.905)	Estimated Objective: 2.4673
+	The time taken to complete this macroreplication was 114.91 s.
+
+Macroreplication 4:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0528
+	Budget: 48	Recommended Solution: (21.716, 21.1444, 21.0724, 20.7673, 20.5625)	Estimated Objective: 2.791
+	Budget: 88	Recommended Solution: (23.524, 22.4992, 23.2362, 22.2295, 22.07)	Estimated Objective: 2.4839
+	Budget: 100	Recommended Solution: (23.524, 22.4992, 23.2362, 22.2295, 22.07)	Estimated Objective: 2.4839
+	The time taken to complete this macroreplication was 115.48 s.
+
+Macroreplication 5:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0366
+	Budget: 48	Recommended Solution: (21.7124, 21.0018, 21.0391, 20.7471, 20.8577)	Estimated Objective: 2.7808
+	Budget: 88	Recommended Solution: (23.7462, 22.1273, 23.2058, 22.078, 22.3834)	Estimated Objective: 2.479
+	Budget: 100	Recommended Solution: (23.7462, 22.1273, 23.2058, 22.078, 22.3834)	Estimated Objective: 2.479
+	The time taken to complete this macroreplication was 115.47 s.
+
+Macroreplication 6:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0481
+	Budget: 48	Recommended Solution: (21.5584, 21.1157, 21.0877, 20.8453, 20.8595)	Estimated Objective: 2.788
+	Budget: 88	Recommended Solution: (23.7824, 22.6918, 22.0258, 22.1449, 22.9082)	Estimated Objective: 2.4886
+	Budget: 100	Recommended Solution: (23.7824, 22.6918, 22.0258, 22.1449, 22.9082)	Estimated Objective: 2.4886
+	The time taken to complete this macroreplication was 114.94 s.
+
+Macroreplication 7:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0601
+	Budget: 48	Recommended Solution: (21.4403, 21.0985, 21.1633, 20.9374, 20.8925)	Estimated Objective: 2.7985
+	Budget: 88	Recommended Solution: (23.294, 21.7393, 23.6893, 22.4476, 22.1918)	Estimated Objective: 2.5093
+	Budget: 100	Recommended Solution: (23.294, 21.7393, 23.6893, 22.4476, 22.1918)	Estimated Objective: 2.5093
+	The time taken to complete this macroreplication was 114.9 s.
+
+Macroreplication 8:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0385
+	Budget: 48	Recommended Solution: (21.4932, 21.2747, 21.0622, 20.8312, 20.7973)	Estimated Objective: 2.7799
+	Budget: 88	Recommended Solution: (23.5623, 23.0326, 22.7356, 22.2042, 22.2602)	Estimated Objective: 2.4702
+	Budget: 100	Recommended Solution: (23.5623, 23.0326, 22.7356, 22.2042, 22.2602)	Estimated Objective: 2.4702
+	The time taken to complete this macroreplication was 114.52 s.
+
+Macroreplication 9:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0469
+	Budget: 48	Recommended Solution: (21.6577, 21.1066, 21.0676, 20.7534, 20.7934)	Estimated Objective: 2.7812
+	Budget: 88	Recommended Solution: (23.8061, 22.3246, 23.4163, 21.9631, 21.8507)	Estimated Objective: 2.4855
+	Budget: 100	Recommended Solution: (23.8061, 22.3246, 23.4163, 21.9631, 21.8507)	Estimated Objective: 2.4855
+	The time taken to complete this macroreplication was 113.97 s.
+
+Macroreplication 10:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0177
+	Budget: 48	Recommended Solution: (21.4671, 21.3756, 20.9683, 21.0084, 20.5573)	Estimated Objective: 2.7681
+	Budget: 88	Recommended Solution: (23.4313, 24.401, 21.4913, 21.3218, 21.459)	Estimated Objective: 2.516
+	Budget: 100	Recommended Solution: (23.4313, 24.401, 21.4913, 21.3218, 21.459)	Estimated Objective: 2.516
+	The time taken to complete this macroreplication was 114.35 s.
+
+Macroreplication 11:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0333
+	Budget: 48	Recommended Solution: (21.7356, 21.1138, 20.9411, 20.663, 20.8553)	Estimated Objective: 2.7779
+	Budget: 88	Recommended Solution: (23.6495, 23.4585, 21.6551, 21.9632, 22.5392)	Estimated Objective: 2.4905
+	Budget: 100	Recommended Solution: (23.6495, 23.4585, 21.6551, 21.9632, 22.5392)	Estimated Objective: 2.4905
+	The time taken to complete this macroreplication was 114.66 s.
+
+Macroreplication 12:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0218
+	Budget: 48	Recommended Solution: (21.5076, 21.1666, 21.1865, 20.8735, 20.7106)	Estimated Objective: 2.7731
+	Budget: 88	Recommended Solution: (23.6603, 23.5102, 21.9856, 22.168, 22.0356)	Estimated Objective: 2.4722
+	Budget: 100	Recommended Solution: (23.6603, 23.5102, 21.9856, 22.168, 22.0356)	Estimated Objective: 2.4722
+	The time taken to complete this macroreplication was 113.48 s.
+
+Macroreplication 13:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0317
+	Budget: 48	Recommended Solution: (21.6325, 21.1452, 21.0465, 20.7926, 20.7808)	Estimated Objective: 2.777
+	Budget: 88	Recommended Solution: (23.5892, 23.2882, 21.8272, 22.6114, 22.1439)	Estimated Objective: 2.4796
+	Budget: 100	Recommended Solution: (23.5892, 23.2882, 21.8272, 22.6114, 22.1439)	Estimated Objective: 2.4796
+	The time taken to complete this macroreplication was 113.85 s.
+
+Macroreplication 14:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.031
+	Budget: 48	Recommended Solution: (21.5384, 21.1484, 21.0727, 20.8915, 20.8238)	Estimated Objective: 2.7762
+	Budget: 88	Recommended Solution: (23.5465, 22.9705, 22.6688, 22.3214, 22.3244)	Estimated Objective: 2.4695
+	Budget: 100	Recommended Solution: (23.5465, 22.9705, 22.6688, 22.3214, 22.3244)	Estimated Objective: 2.4695
+	The time taken to complete this macroreplication was 112.74 s.
+
+Macroreplication 15:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0413
+	Budget: 48	Recommended Solution: (21.6755, 21.2186, 20.7921, 20.8062, 20.8603)	Estimated Objective: 2.7873
+	Budget: 88	Recommended Solution: (23.7058, 22.9723, 22.4425, 22.8736, 20.8872)	Estimated Objective: 2.4982
+	Budget: 100	Recommended Solution: (23.7058, 22.9723, 22.4425, 22.8736, 20.8872)	Estimated Objective: 2.4982
+	The time taken to complete this macroreplication was 113.97 s.
+
+Macroreplication 16:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0366
+	Budget: 48	Recommended Solution: (21.4608, 21.1603, 21.0212, 20.8057, 21.0664)	Estimated Objective: 2.7881
+	Budget: 88	Recommended Solution: (23.6824, 23.1598, 22.4216, 22.1767, 22.259)	Estimated Objective: 2.48
+	Budget: 100	Recommended Solution: (23.6824, 23.1598, 22.4216, 22.1767, 22.259)	Estimated Objective: 2.48
+	The time taken to complete this macroreplication was 113.68 s.
+
+Macroreplication 17:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0278
+	Budget: 48	Recommended Solution: (21.6277, 21.1058, 21.0257, 20.814, 20.85)	Estimated Objective: 2.7738
+	Budget: 88	Recommended Solution: (23.7466, 23.139, 22.0014, 22.2646, 22.4365)	Estimated Objective: 2.4733
+	Budget: 100	Recommended Solution: (23.7466, 23.139, 22.0014, 22.2646, 22.4365)	Estimated Objective: 2.4733
+	The time taken to complete this macroreplication was 113.98 s.
+
+Macroreplication 18:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0332
+	Budget: 48	Recommended Solution: (21.5693, 20.935, 21.0222, 21.0883, 20.8623)	Estimated Objective: 2.7788
+	Budget: 88	Recommended Solution: (23.923, 22.3444, 22.8613, 22.4402, 22.0707)	Estimated Objective: 2.4691
+	Budget: 100	Recommended Solution: (23.923, 22.3444, 22.8613, 22.4402, 22.0707)	Estimated Objective: 2.4691
+	The time taken to complete this macroreplication was 113.99 s.
+
+Macroreplication 19:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0335
+	Budget: 48	Recommended Solution: (21.6422, 21.0622, 21.0807, 20.8499, 20.7708)	Estimated Objective: 2.7815
+	Budget: 88	Recommended Solution: (23.6488, 23.2677, 22.6103, 21.7259, 22.2535)	Estimated Objective: 2.4729
+	Budget: 100	Recommended Solution: (23.6488, 23.2677, 22.6103, 21.7259, 22.2535)	Estimated Objective: 2.4729
+	The time taken to complete this macroreplication was 113.42 s.
+
+Macroreplication 20:
+	Budget: 4	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 3.0327
+	Budget: 48	Recommended Solution: (21.5009, 21.1593, 21.0007, 20.9303, 20.9198)	Estimated Objective: 2.7801
+	Budget: 88	Recommended Solution: (23.4022, 22.5674, 22.4737, 22.881, 22.5396)	Estimated Objective: 2.4749
+	Budget: 100	Recommended Solution: (23.4022, 22.5674, 22.4737, 22.881, 22.5396)	Estimated Objective: 2.4749
+	The time taken to complete this macroreplication was 113.43 s.

@@ -1,0 +1,133 @@
+./experiments/outputs/ADAM_on_OPENJACKSON-1.pickle
+Problem: OPENJACKSON-1
+Solver: ADAM
+
+Model Factors:
+	number_queues: 5
+	arrival_alphas: [1, 1, 1, 1, 1]
+	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0, 0.1, 0.3], [0.1, 0.1, 0.1, 0, 0.3], [0.1, 0.1, 0.1, 0.1, 0.2]]
+	t_end: 1000
+	warm_up: 50
+	service_rates_capacity: 100
+
+Problem Factors:
+	initial_solution: [20, 20, 20, 20, 20]
+	budget: 100
+
+Solver Factors:
+	crn_across_solns: True
+	r: 30
+	beta_1: 0.9
+	beta_2: 0.999
+	alpha: 0.5
+	epsilon: 1e-08
+	sensitivity: 1e-07
+
+20 macroreplications were run.
+200 postreplications were run at each recommended solution.
+
+The initial solution is (20, 20, 20, 20, 20). Its estimated objective is 0.7402.
+The proxy optimal solution is (20, 20, 20, 20, 20). Its estimated objective is 0.7402.
+200 postreplications were taken at x0 and x_star.
+
+Macroreplication Results:
+
+Macroreplication 1:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.743
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.743
+	The time taken to complete this macroreplication was 105.14 s.
+
+Macroreplication 2:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7383
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7383
+	The time taken to complete this macroreplication was 106.65 s.
+
+Macroreplication 3:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7401
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7401
+	The time taken to complete this macroreplication was 106.0 s.
+
+Macroreplication 4:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7407
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7407
+	The time taken to complete this macroreplication was 105.4 s.
+
+Macroreplication 5:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.737
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.737
+	The time taken to complete this macroreplication was 105.04 s.
+
+Macroreplication 6:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7432
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7432
+	The time taken to complete this macroreplication was 104.6 s.
+
+Macroreplication 7:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7351
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7351
+	The time taken to complete this macroreplication was 105.78 s.
+
+Macroreplication 8:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7377
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7377
+	The time taken to complete this macroreplication was 103.73 s.
+
+Macroreplication 9:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.737
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.737
+	The time taken to complete this macroreplication was 104.27 s.
+
+Macroreplication 10:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7405
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7405
+	The time taken to complete this macroreplication was 104.54 s.
+
+Macroreplication 11:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7423
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7423
+	The time taken to complete this macroreplication was 103.72 s.
+
+Macroreplication 12:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7378
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7378
+	The time taken to complete this macroreplication was 69.77 s.
+
+Macroreplication 13:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7346
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7346
+	The time taken to complete this macroreplication was 68.42 s.
+
+Macroreplication 14:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7323
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7323
+	The time taken to complete this macroreplication was 70.53 s.
+
+Macroreplication 15:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7387
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7387
+	The time taken to complete this macroreplication was 67.07 s.
+
+Macroreplication 16:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7357
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7357
+	The time taken to complete this macroreplication was 67.25 s.
+
+Macroreplication 17:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7348
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7348
+	The time taken to complete this macroreplication was 67.13 s.
+
+Macroreplication 18:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7376
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7376
+	The time taken to complete this macroreplication was 67.4 s.
+
+Macroreplication 19:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7446
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7446
+	The time taken to complete this macroreplication was 67.31 s.
+
+Macroreplication 20:
+	Budget: 0	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7352
+	Budget: 100	Recommended Solution: (20, 20, 20, 20, 20)	Estimated Objective: 0.7352
+	The time taken to complete this macroreplication was 66.83 s.

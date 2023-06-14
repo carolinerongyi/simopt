@@ -52,42 +52,37 @@ class OpenJackson(Model):
             "arrival_alphas": {
                 "description": "The arrival rates to each queue from outside the network",
                 "datatype": list,
-                "default": [1,1,1,1,1]
+                "default": [2,2,2,2,2]
             },
             "service_mus": {
                 "description": "The mu values for the exponential service times ",
                 "datatype": list,
-                "default": [30,30,20,10,10]
+                "default": [20,20,20,20,20]
             },
             "routing_matrix": {
                 "description": "The routing matrix that describes the probabilities of moving to the next queue after leaving the current one",
                 "datatype": list,
                 "default": [[0.1, 0.1, 0.2, 0.2, 0],
                             [0.1, 0.1, 0.2, 0.2, 0],
-                            [0.1, 0.1, 0, 0.1, 0.3],
-                            [0.1, 0.1, 0.1, 0, 0.3],
+                            [0.2, 0.1, 0, 0.1, 0.2],
+                            [0.1, 0.1, 0.1, 0, 0.2],
                             [0.1, 0.1, 0.1, 0.1, 0.2]]
             },
-            # "departure_probabilities": {
-            #     "description": "The probabilities that the job leaves the network after the service",
-            #     "datatype": list,
-            #     "default": [0.4,0.4,0.4,0.4,0.4]
-            # },
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": list,
-                "default": 1000
+                "default": 5000
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
                 "datatype": int,
-                "default": 50
+                "default": 500
             },
-            "service_rates_capacity": {
-                "description": "An upper bound on the total service rates",
-                "datatype": list,
-                "default": 100
-            },
+            "steady_state_initialization":{
+                "description": "Whether the model will be initialized with steady state values",
+                "datatype": bool,
+                "default": False
+            }
             
         }
         self.check_factor_list = {
@@ -95,10 +90,9 @@ class OpenJackson(Model):
             "arrival_alphas": self.check_arrival_alphas,
             "routing_matrix": self.check_routing_matrix,
             "service_mus": self.check_service_mus,
-            # "departure_probabilities": self.check_departure_probabilities,
             "t_end": self.check_t_end,
             "warm_up": self.check_warm_up,
-            "service_rates_capacity": self.check_service_rates_capacity,
+            "steady_state_initialization": self.check_steady_state_initialization
         }
         # Set factors of the simulation model.
         super().__init__(fixed_factors)
@@ -123,13 +117,14 @@ class OpenJackson(Model):
     def check_warm_up(self):
         # Assume f(x) can be evaluated at any x in R^d.
         return self.factors["warm_up"] >= 0
-    def check_service_rates_capacity(self):
-        # Assume f(x) can be evaluated at any x in R^d.
-        return self.factors["service_rates_capacity"] >= 0
+    def check_steady_state_initialization(self):
+        return isinstance(self.factors["steady_state_initialization"], bool)
 
 
     def check_simulatable_factors(self):
-        return (sum(self.factors['service_mus']) <= self.factors['service_rates_capacity'])
+        routing_matrix = np.asarray(self.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
+        return all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors['number_queues']))
     
     def replicate(self, rng_list):
         """
@@ -151,23 +146,43 @@ class OpenJackson(Model):
         arrival_rng = rng_list[0]
         transition_rng = rng_list[1]
         time_rng = rng_list[2]
+        initialization_rng = rng_list[3]
+
+
+        #calculate the steady state of the queues to check the simulation
+        #calculate lambdas
+        routing_matrix = np.asarray(self.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
+        rho = lambdas/self.factors["service_mus"]
+        #calculate expected value of queue length as rho/(1-rho)
+        expected_queue_length = (rho)/(1-rho)
+
+        if self.factors["steady_state_initialization"]:
+        # sample initialized queue lengths
+            queues = [initialization_rng.geometric(rho[i]) for i in range(self.factors["number_queues"])]
+            completion_times = [math.inf for _ in range(self.factors["number_queues"])]
+            # Generate all interarrival, network routes, and service times before the simulation run.
+            next_arrivals = [arrival_rng.expovariate(self.factors["arrival_alphas"][i])]
+            for i in range(self.factors["number_queues"]):
+                if queues[i] > 0:
+                    completion_times[i] = time_rng.expovariate(self.factors["service_mus"][i])
+        else:
+            queues = [0 for _ in range(self.factors["number_queues"])]
+            # Generate all interarrival, network routes, and service times before the simulation run.
+            next_arrivals = [arrival_rng.expovariate(self.factors["arrival_alphas"][i])
+                            for i in range(self.factors["number_queues"])]
+
+            # create list of each station's next completion time and initialize to infinity.
+            completion_times = [math.inf for _ in range(self.factors["number_queues"])]
+
+            # initialize list of each station's average queue length
+            time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
 
         # Initiate clock variables for statistics tracking and event handling.
         clock = 0
         previous_clock = 0
 
-        # Generate all interarrival, network routes, and service times before the simulation run.
-        next_arrivals = [arrival_rng.expovariate(self.factors["arrival_alphas"][i])
-                         for i in range(self.factors["number_queues"])]
-
-        # create list of each station's next completion time and initialize to infinity.
-        completion_times = [math.inf for _ in range(self.factors["number_queues"])]
-
-        # initialize list of each station's average queue length
-        time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
         
-        # initialize the queue at each station
-        queues = [0 for _ in range(self.factors["number_queues"])]
 
         while clock < self.factors['warm_up']:
             next_arrival = min(next_arrivals)
@@ -239,14 +254,6 @@ class OpenJackson(Model):
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
 
-        #calculate the steady state of the queues to check the simulation
-        #calculate lambdas
-        routing_matrix = np.asarray(self.factors["routing_matrix"])
-        lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
-        rho = lambdas/self.factors["service_mus"]
-        #calculate expected value of queue length as rho/(1-rho)
-        expected_queue_length = (rho)/(1-rho)
-
 
         responses = {"average_queue_length": average_queue_length, "expected_queue_length" :expected_queue_length}
         gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in
@@ -274,6 +281,8 @@ class OpenJacksonMinQueue(Problem):
         number of objectives
     n_stochastic_constraints : int
         number of stochastic constraints
+    service_rates_budget: int
+        budget for total service rates sum
     minmax : tuple of int (+/- 1)
         indicator of maximization (+1) or minimization (-1) for each objective
     constraint_type : string
@@ -352,6 +361,11 @@ class OpenJacksonMinQueue(Problem):
                 "description": "max # of replications for a solver to take",
                 "datatype": int,
                 "default": 100
+            },
+            "service_rates_budget" :{
+                "description": "budget for total service rates sum",
+                "datatype": int,
+                "default": 100 # ask later: access model factors when setting default values for budget
             }
         }
         self.check_factor_list = {
@@ -362,7 +376,9 @@ class OpenJacksonMinQueue(Problem):
         self.model = OpenJackson(self.model_fixed_factors)
         self.dim = self.model.factors["number_queues"]
         self.lower_bounds = tuple(0 for _ in range(self.model.factors["number_queues"]))
-        self.upper_bounds = tuple(self.model.factors["service_rates_capacity"] for _ in range(self.model.factors["number_queues"]))
+        routing_matrix = np.asarray(self.model.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
+        self.upper_bounds = tuple(2*sum(lambdas["arrival_alphas"]) for _ in range(self.model.factors["number_queues"]))
         # Instantiate model with fixed factors and overwritten defaults.
         self.optimal_value = None  # Change if f is changed.
         self.optimal_solution = None  # Change if f is changed.
@@ -500,7 +516,10 @@ class OpenJacksonMinQueue(Problem):
         """
         # Superclass method will check box constraints.
         # Can add other constraints here.
-        return super().check_deterministic_constraints(x) # ask about it
+        routing_matrix = np.asarray(self.model.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
+        box_feasible = all(x[i] > lambdas[i] for i in range(self.model.factors['number_queues']))
+        return super().check_deterministic_constraints(x) * box_feasible
 
     def get_random_solution(self, rand_sol_rng):
         """
@@ -518,7 +537,7 @@ class OpenJacksonMinQueue(Problem):
         """
         # x = tuple([rand_sol_rng.uniform(-2, 2) for _ in range(self.dim)])
         x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
-                                                               summation=self.model.factors['service_rates_capacity'],
+                                                               summation=2*sum(self.model.factors["arrival_alphas"]),
                                                                exact_sum=False
                                                                )
         return x
