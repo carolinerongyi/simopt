@@ -40,7 +40,7 @@ class OpenJackson(Model):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "OPENJACKSON"
-        self.n_rngs = 4
+        self.n_rngs = 3 * (self.factors["number_queues"] + 1)
         self.n_responses = 2
         self.factors = fixed_factors
         self.specifications = {
@@ -68,11 +68,6 @@ class OpenJackson(Model):
                             [0.1, 0.1, 0.1, 0, 0.3],
                             [0.1, 0.1, 0.1, 0.1, 0.2]]
             },
-            # "departure_probabilities": {
-            #     "description": "The probabilities that the job leaves the network after the service",
-            #     "datatype": list,
-            #     "default": [0.4,0.4,0.4,0.4,0.4]
-            # },
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": list,
@@ -131,6 +126,12 @@ class OpenJackson(Model):
     def check_simulatable_factors(self):
         return (sum(self.factors['service_mus']) <= self.factors['service_rates_capacity'])
     
+    # function that calu
+    def calc_lambdas(self):
+        routing_matrix = np.asarray(self.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
+        return lambdas
+
     def replicate(self, rng_list):
         """
         Simulate a single replication for the current model factors.
@@ -513,11 +514,15 @@ class OpenJacksonMinQueue(Problem):
 
         Returns
         -------
-        x : tuple
-            vector of decision variables
+        x : vector of decision variables
         """
-        # x = tuple([rand_sol_rng.uniform(-2, 2) for _ in range(self.dim)])
-        x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
+        if (self.factors["steady_state_initialization"]==True):
+            x = []
+            sum_lambdas = self.model.calc_lambdas(self.model)
+            for i in range(self.model.factors["number_queues"]):
+                x = self.model.factors[""]
+        else:
+            x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
                                                                summation=self.model.factors['service_rates_capacity'],
                                                                exact_sum=False
                                                                )
