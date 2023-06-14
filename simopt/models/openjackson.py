@@ -541,10 +541,11 @@ class OpenJacksonMinQueue(Problem):
         x : vector of decision variables
         """
         if (self.factors["steady_state_initialization"]==True):
-            x = []
-            sum_lambdas = self.model.calc_lambdas(self.model)
+            x = np.zeros(self.model.factors["number_queues"])
+            lambdas = self.model.calc_lambdas(self.model)
+            sum_alphas = sum(self.model.factors["arrival_alphas"])
             for i in range(self.model.factors["number_queues"]):
-                x = self.model.factors[""]
+                x[i] = lambdas[i] + rand_sol_rng.random_sample() * sum_alphas
         else:
             x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
                                                                summation=2*sum(self.model.factors["arrival_alphas"]),
