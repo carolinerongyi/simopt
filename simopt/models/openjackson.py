@@ -120,17 +120,17 @@ class OpenJackson(Model):
     def check_steady_state_initialization(self):
         return isinstance(self.factors["steady_state_initialization"], bool)
 
-
-    def check_simulatable_factors(self):
-        routing_matrix = np.asarray(self.factors["routing_matrix"])
-        lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
-        return all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors['number_queues']))
-    
-    # function that calu
+    # function that calulates the lambdas
     def calc_lambdas(self):
         routing_matrix = np.asarray(self.factors["routing_matrix"])
         lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
         return lambdas
+    
+    def check_simulatable_factors(self):
+        lambdas = self.calc_lambdas(self)
+        return all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors['number_queues']))
+    
+   
 
     def replicate(self, rng_list):
         """
