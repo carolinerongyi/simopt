@@ -150,19 +150,18 @@ class OpenJackson(Model):
             "expected queue length": The expected queue length calculated using stationary distribution
         """
         # Designate random number generators.
-        arrival_rng = rng_list[0]
-        transition_rng = rng_list[1]
-        time_rng = rng_list[2]
-        initialization_rng = rng_list[3]
+        arrival_rng = [rng_list[i] for i in range(self.factors["number_queues"])]
+        transition_rng = [rng_list[i + self.factors["number_queues"]] for i in range(self.factors["number_queues"])]
+        time_rng = [rng_list[i + 2*self.factors["number_queues"]] for i in range(self.factors["number_queues"])]
+        initialization_rng = rng_list[-1]
 
         def geometric(p):
-            return math.floor(math.log(1 - initialization_rng.random()) / math.log(1.0 - p))
+            return math.floor(np.log(1 - initialization_rng.uniform(0,1)) / math.log(p))
         #calculate the steady state of the queues to check the simulation
         #calculate lambdas
         routing_matrix = np.asarray(self.factors["routing_matrix"])
         lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
         rho = lambdas/self.factors["service_mus"]
-        print(rho)
         #calculate expected value of queue length as rho/(1-rho)
         expected_queue_length = (rho)/(1-rho)
 
@@ -172,16 +171,15 @@ class OpenJackson(Model):
             queues = [geometric(rho[i]) for i in range(self.factors["number_queues"])]
             completion_times = [math.inf for _ in range(self.factors["number_queues"])]
             # Generate all interarrival, network routes, and service times before the simulation run.
-            next_arrivals = [arrival_rng.expovariate(self.factors["arrival_alphas"][i]) for i in range(self.factors["number_queues"])]
+            next_arrivals = [arrival_rng[i].expovariate(self.factors["arrival_alphas"][i]) for i in range(self.factors["number_queues"])]
             for i in range(self.factors["number_queues"]):
                 if queues[i] > 0:
-                    completion_times[i] = time_rng.expovariate(self.factors["service_mus"][i])
+                    completion_times[i] = time_rng[i].expovariate(self.factors["service_mus"][i])
             time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
-            print(queues)
         else:
             queues = [0 for _ in range(self.factors["number_queues"])]
             # Generate all interarrival, network routes, and service times before the simulation run.
-            next_arrivals = [arrival_rng.expovariate(self.factors["arrival_alphas"][i])
+            next_arrivals = [arrival_rng[i].expovariate(self.factors["arrival_alphas"][i])
                             for i in range(self.factors["number_queues"])]
 
             # create list of each station's next completion time and initialize to infinity.
@@ -203,25 +201,25 @@ class OpenJackson(Model):
                 if next_arrival < next_completion: # next event is an arrival
                     station = next_arrivals.index(next_arrival)
                     queues[station] += 1
-                    next_arrivals[station] += arrival_rng.expovariate(self.factors["arrival_alphas"][station])
+                    next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
                     if queues[station] == 1:
-                        completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
+                        completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                 else: # next event is a departure
                     station = completion_times.index(next_completion)
                     queues[station] -= 1
                     if queues[station] > 0:
-                        completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
+                        completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                     else:
                         completion_times[station] = math.inf
                     
                     # schedule where the customer will go next
-                    prob = transition_rng.random()
+                    prob = transition_rng[station].random()
                     
                     if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
                         next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
                         queues[next_station] += 1
                         if queues[next_station] == 1:
-                            completion_times[next_station] = clock + time_rng.expovariate(self.factors["service_mus"][next_station])
+                            completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
             clock = 0
             previous_clock = 0
 
@@ -241,25 +239,25 @@ class OpenJackson(Model):
             if next_arrival < next_completion: # next event is an arrival
                 station = next_arrivals.index(next_arrival)
                 queues[station] += 1
-                next_arrivals[station] += arrival_rng.expovariate(self.factors["arrival_alphas"][station])
+                next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
                 if queues[station] == 1:
-                    completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
+                    completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
             else: # next event is a departure
                 station = completion_times.index(next_completion)
                 queues[station] -= 1
                 if queues[station] > 0:
-                    completion_times[station] = clock + time_rng.expovariate(self.factors["service_mus"][station])
+                    completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                 else:
                     completion_times[station] = math.inf
                 
                 # schedule where the customer will go next
-                prob = transition_rng.random()
+                prob = transition_rng[station].random()
                 
                 if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
                     next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
                     queues[next_station] += 1
                     if queues[next_station] == 1:
-                        completion_times[next_station] = clock + time_rng.expovariate(self.factors["service_mus"][next_station])
+                        completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
 
                 
         # end of simulation
