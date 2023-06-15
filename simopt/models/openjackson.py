@@ -40,7 +40,6 @@ class OpenJackson(Model):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "OPENJACKSON"
-        self.n_rngs = 3 * (self.factors["number_queues"] + 1)
         self.n_responses = 2
         self.factors = fixed_factors
         self.specifications = {
@@ -84,6 +83,7 @@ class OpenJackson(Model):
                 "default": False
             }
             
+            
         }
         self.check_factor_list = {
             "number_queues": self.check_number_queues,
@@ -96,6 +96,7 @@ class OpenJackson(Model):
         }
         # Set factors of the simulation model.
         super().__init__(fixed_factors)
+        self.n_rngs = 3 * (self.factors["number_queues"] + 1)
 
     
 
@@ -127,7 +128,7 @@ class OpenJackson(Model):
         return lambdas
     
     def check_simulatable_factors(self):
-        lambdas = self.calc_lambdas(self)
+        lambdas = self.calc_lambdas()
         return all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors['number_queues']))
     
    
@@ -161,6 +162,7 @@ class OpenJackson(Model):
         routing_matrix = np.asarray(self.factors["routing_matrix"])
         lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
         rho = lambdas/self.factors["service_mus"]
+        print(rho)
         #calculate expected value of queue length as rho/(1-rho)
         expected_queue_length = (rho)/(1-rho)
 
@@ -546,7 +548,7 @@ class OpenJacksonMinQueue(Problem):
         """
         if (self.factors["steady_state_initialization"]==True):
             x = np.zeros(self.model.factors["number_queues"])
-            lambdas = self.model.calc_lambdas(self.model)
+            lambdas = self.model.calc_lambdas()
             sum_alphas = sum(self.model.factors["arrival_alphas"])
             for i in range(self.model.factors["number_queues"]):
                 x[i] = lambdas[i] + rand_sol_rng.random_sample() * sum_alphas
