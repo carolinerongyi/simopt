@@ -40,7 +40,7 @@ class OpenJackson(Model):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "OPENJACKSON"
-        self.n_rngs = 4
+        self.n_rngs = 3 * (self.factors["number_queues"] + 1)
         self.n_responses = 2
         self.factors = fixed_factors
         self.specifications = {
@@ -120,12 +120,18 @@ class OpenJackson(Model):
     def check_steady_state_initialization(self):
         return isinstance(self.factors["steady_state_initialization"], bool)
 
-
-    def check_simulatable_factors(self):
+    # function that calulates the lambdas
+    def calc_lambdas(self):
         routing_matrix = np.asarray(self.factors["routing_matrix"])
         lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
+        return lambdas
+    
+    def check_simulatable_factors(self):
+        lambdas = self.calc_lambdas(self)
         return all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors['number_queues']))
     
+   
+
     def replicate(self, rng_list):
         """
         Simulate a single replication for the current model factors.
@@ -536,11 +542,16 @@ class OpenJacksonMinQueue(Problem):
 
         Returns
         -------
-        x : tuple
-            vector of decision variables
+        x : vector of decision variables
         """
-        # x = tuple([rand_sol_rng.uniform(-2, 2) for _ in range(self.dim)])
-        x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
+        if (self.factors["steady_state_initialization"]==True):
+            x = np.zeros(self.model.factors["number_queues"])
+            lambdas = self.model.calc_lambdas(self.model)
+            sum_alphas = sum(self.model.factors["arrival_alphas"])
+            for i in range(self.model.factors["number_queues"]):
+                x[i] = lambdas[i] + rand_sol_rng.random_sample() * sum_alphas
+        else:
+            x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
                                                                summation=2*sum(self.model.factors["arrival_alphas"]),
                                                                exact_sum=False
                                                                )
