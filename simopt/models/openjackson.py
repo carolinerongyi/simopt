@@ -220,6 +220,8 @@ class OpenJackson(Model):
                         queues[next_station] += 1
                         if queues[next_station] == 1:
                             completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
+            next_arrivals = [next_arrivals[i] - clock for i in range(self.factors["number_queues"])]
+            completion_times = [completion_times[i] - clock for i in range(self.factors["number_queues"])]
             clock = 0
             previous_clock = 0
 
@@ -251,7 +253,7 @@ class OpenJackson(Model):
                     completion_times[station] = math.inf
                 
                 # schedule where the customer will go next
-                prob = transition_rng[station].random()
+                prob = transition_rng[station].uniform(0,1)
                 
                 if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
                     next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
