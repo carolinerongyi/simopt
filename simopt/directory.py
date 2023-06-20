@@ -12,6 +12,9 @@ from .solvers.strong import STRONG
 from .solvers.spsa import SPSA
 from .solvers.adam import ADAM
 from .solvers.aloe import ALOE
+from .solvers.Boom_FrankWolfe import BoomFrankWolfe
+from .solvers.Boom_ProxGD import BoomProxGD
+
 # import models and problems
 from .models.example import ExampleModel, ExampleProblem
 from .models.cntnv import CntNV, CntNVMaxProfit
@@ -41,7 +44,9 @@ solver_directory = {
     "STRONG": STRONG,
     "SPSA": SPSA,
     "ADAM": ADAM,
-    "ALOE": ALOE
+    "ALOE": ALOE,
+    "BOOM-FW" : BoomFrankWolfe,
+    "BOOM-GD" : BoomProxGD
 }
 
 solver_unabbreviated_directory = {
@@ -51,7 +56,9 @@ solver_unabbreviated_directory = {
     "STRONG (SBCN)": STRONG,
     "SPSA (SBCN)": SPSA,
     "ADAM (SBCN)": ADAM,
-    "ALOE (SBCN)": ALOE
+    "ALOE (SBCN)": ALOE,
+    "BOOM-FrankWolfe" : BoomFrankWolfe,
+    "BOOM-ProxGD" : BoomProxGD
 }
 
 problem_directory = {

@@ -388,7 +388,7 @@ class OpenJacksonMinQueue(Problem):
         self.lower_bounds = tuple(0 for _ in range(self.model.factors["number_queues"]))
         routing_matrix = np.asarray(self.model.factors["routing_matrix"])
         lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
-        self.upper_bounds = tuple(2*sum(lambdas["arrival_alphas"]) for _ in range(self.model.factors["number_queues"]))
+        self.upper_bounds = tuple((2*sum(lambdas)) for _ in range(self.model.factors["number_queues"]))
         # Instantiate model with fixed factors and overwritten defaults.
         self.optimal_value = None  # Change if f is changed.
         self.optimal_solution = None  # Change if f is changed.
