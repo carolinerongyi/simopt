@@ -51,12 +51,12 @@ class OpenJackson(Model):
             "arrival_alphas": {
                 "description": "The arrival rates to each queue from outside the network",
                 "datatype": list,
-                "default": [2,2,2,2,2]
+                "default": [2,3,2,4,3]
             },
             "service_mus": {
                 "description": "The mu values for the exponential service times ",
                 "datatype": list,
-                "default": [20,20,20,20,20]
+                "default": [8.85,9.45,8.85,11.63,10.8]
             },
             "routing_matrix": {
                 "description": "The routing matrix that describes the probabilities of moving to the next queue after leaving the current one",
@@ -70,17 +70,17 @@ class OpenJackson(Model):
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": int,
-                "default": 50000
+                "default": 1000
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
                 "datatype": int,
-                "default": 5000
+                "default": 200
             },
             "steady_state_initialization":{
                 "description": "Whether the model will be initialized with steady state values",
                 "datatype": bool,
-                "default": False
+                "default": True
             }
             
             
@@ -367,7 +367,7 @@ class OpenJacksonMinQueue(Problem):
             "initial_solution": {
                 "description": "initial solution",
                 "datatype": tuple,
-                "default": [20,20,20,20,20]
+                "default": [8.85,9.45,8.85,11.63,10.8]
             },
             "budget": {
                 "description": "max # of replications for a solver to take",
@@ -377,7 +377,7 @@ class OpenJacksonMinQueue(Problem):
             "service_rates_budget" :{
                 "description": "budget for total service rates sum",
                 "datatype": int,
-                "default": 100 # ask later: access model factors when setting default values for budget
+                "default": 66 # ask later: access model factors when setting default values for budget
             }
         }
         self.check_factor_list = {
@@ -386,11 +386,13 @@ class OpenJacksonMinQueue(Problem):
         }
         super().__init__(fixed_factors, model_fixed_factors)
         self.model = OpenJackson(self.model_fixed_factors)
+        self.Ci = np.array([1 for _ in range(self.model.factors["number_queues"])])
+        self.di = np.array([self.factors['service_rates_budget']])
+        self.Ce = None
+        self.de = None
         self.dim = self.model.factors["number_queues"]
         self.lower_bounds = tuple(0 for _ in range(self.model.factors["number_queues"]))
-        routing_matrix = np.asarray(self.model.factors["routing_matrix"])
-        lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
-        self.upper_bounds = tuple(2*sum(lambdas["arrival_alphas"]) for _ in range(self.model.factors["number_queues"]))
+        self.upper_bounds = tuple(self.factors['service_rates_budget'] for _ in range(self.model.factors["number_queues"]))
         # Instantiate model with fixed factors and overwritten defaults.
         self.optimal_value = None  # Change if f is changed.
         self.optimal_solution = None  # Change if f is changed.
@@ -531,7 +533,8 @@ class OpenJacksonMinQueue(Problem):
         routing_matrix = np.asarray(self.model.factors["routing_matrix"])
         lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
         box_feasible = all(x[i] > lambdas[i] for i in range(self.model.factors['number_queues']))
-        return super().check_deterministic_constraints(x) * box_feasible
+        upper_feasible = sum(x) < self.factors['service_rates_budget']
+        return super().check_deterministic_constraints(x) * box_feasible * upper_feasible
 
     def get_random_solution(self, rand_sol_rng):
         """
@@ -546,7 +549,7 @@ class OpenJacksonMinQueue(Problem):
         -------
         x : vector of decision variables
         """
-        if (self.factors["steady_state_initialization"]==True):
+        if (self.model.factors["steady_state_initialization"]==True):
             x = np.zeros(self.model.factors["number_queues"])
             lambdas = self.model.calc_lambdas()
             sum_alphas = sum(self.model.factors["arrival_alphas"])
@@ -554,7 +557,7 @@ class OpenJacksonMinQueue(Problem):
                 x[i] = lambdas[i] + rand_sol_rng.uniform(0,1) * sum_alphas
         else:
             x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
-                                                               summation=2*sum(self.model.factors["arrival_alphas"]),
+                                                               summation=self.factors["service_rates_budget"],
                                                                exact_sum=False
                                                                )
         return x
