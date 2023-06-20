@@ -69,13 +69,13 @@ class OpenJackson(Model):
             },
             "t_end": {
                 "description": "A number of replications to run",
-                "datatype": list,
-                "default": 7000
+                "datatype": int,
+                "default": 50000
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
                 "datatype": int,
-                "default": 500
+                "default": 5000
             },
             "steady_state_initialization":{
                 "description": "Whether the model will be initialized with steady state values",
@@ -551,7 +551,7 @@ class OpenJacksonMinQueue(Problem):
             lambdas = self.model.calc_lambdas()
             sum_alphas = sum(self.model.factors["arrival_alphas"])
             for i in range(self.model.factors["number_queues"]):
-                x[i] = lambdas[i] + rand_sol_rng.random_sample() * sum_alphas
+                x[i] = lambdas[i] + rand_sol_rng.uniform(0,1) * sum_alphas
         else:
             x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
                                                                summation=2*sum(self.model.factors["arrival_alphas"]),
