@@ -14,6 +14,8 @@ from .solvers.adam import ADAM
 from .solvers.aloe import ALOE
 from .solvers.frankwolfe import FrankWolfe
 from .solvers.pgd import PGD
+from .solvers.Boom_FrankWolfe import BoomFrankWolfe
+from .solvers.Boom_ProxGD import BoomProxGD
 # import models and problems
 from .models.example import ExampleModel, ExampleProblem
 from .models.cntnv import CntNV, CntNVMaxProfit
@@ -45,7 +47,9 @@ solver_directory = {
     "ADAM": ADAM,
     "ALOE": ALOE,
     "FRANKWOLFE": FrankWolfe,
-    "PGD": PGD
+    "PGD": PGD,
+    "BOOM-FW" : BoomFrankWolfe,
+    "BOOM-PGD" : BoomProxGD
 }
 
 solver_unabbreviated_directory = {
@@ -57,7 +61,9 @@ solver_unabbreviated_directory = {
     "ADAM (SBCN)": ADAM,
     "ALOE (SBCN)": ALOE,
     "FRANKWOLFE ()": FrankWolfe,
-    "PGD ()": PGD
+    "PGD ()": PGD,
+    "BOOM-FrankWolfe ()" : BoomFrankWolfe,
+    "BOOM-ProxGD ()" : BoomProxGD
 }
 
 problem_directory = {
