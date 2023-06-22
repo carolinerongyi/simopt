@@ -1,0 +1,139 @@
+./experiments/outputs/Boom-FW_on_OPENJACKSON-1.pickle
+Problem: OPENJACKSON-1
+Solver: Boom-FW
+
+Model Factors:
+	number_queues: 5
+	arrival_alphas: [2, 3, 2, 4, 3]
+	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.2, 0.1, 0, 0.1, 0.2], [0.1, 0.1, 0.1, 0, 0.2], [0.1, 0.1, 0.1, 0.1, 0.2]]
+	t_end: 1000
+	warm_up: 200
+	steady_state_initialization: True
+
+Problem Factors:
+	initial_solution: [8.85, 9.45, 8.85, 11.63, 10.8]
+	budget: 100
+	service_rates_budget: 66
+
+Solver Factors:
+	crn_across_solns: True
+	r: 30
+	h: 0.1
+	step_f: <bound method BoomFrankWolfe.default_step_f of <simopt.solvers.Boom_FrankWolfe.BoomFrankWolfe object at 0x0000027D73527FD0>>
+	theta: 0.2
+	max_iters: 300
+	line_search_max_iters: 20
+	ratio: 0.8
+	atom_vectors: None
+	max_gamma: 1
+	backtrack: 0
+	algorithm: normal
+
+20 macroreplications were run.
+200 postreplications were run at each recommended solution.
+
+The initial solution is (8.85, 9.45, 8.85, 11.63, 10.8). Its estimated objective is 10.0269.
+The proxy optimal solution is (8.85, 9.45, 8.85, 11.63, 10.8). Its estimated objective is 10.0269.
+200 postreplications were taken at x0 and x_star.
+
+Macroreplication Results:
+
+Macroreplication 1:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0093
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0093
+	The time taken to complete this macroreplication was 203.72 s.
+
+Macroreplication 2:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0076
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0076
+	The time taken to complete this macroreplication was 203.93 s.
+
+Macroreplication 3:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0102
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0102
+	The time taken to complete this macroreplication was 205.78 s.
+
+Macroreplication 4:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.033
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.033
+	The time taken to complete this macroreplication was 201.11 s.
+
+Macroreplication 5:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0849
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0849
+	The time taken to complete this macroreplication was 201.79 s.
+
+Macroreplication 6:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0167
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0167
+	The time taken to complete this macroreplication was 203.9 s.
+
+Macroreplication 7:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0554
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0554
+	The time taken to complete this macroreplication was 2493.04 s.
+
+Macroreplication 8:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0031
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0031
+	The time taken to complete this macroreplication was 200.42 s.
+
+Macroreplication 9:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0455
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0455
+	The time taken to complete this macroreplication was 193.33 s.
+
+Macroreplication 10:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9864
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9864
+	The time taken to complete this macroreplication was 194.86 s.
+
+Macroreplication 11:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0058
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0058
+	The time taken to complete this macroreplication was 195.38 s.
+
+Macroreplication 12:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9872
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9872
+	The time taken to complete this macroreplication was 194.64 s.
+
+Macroreplication 13:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0324
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0324
+	The time taken to complete this macroreplication was 195.01 s.
+
+Macroreplication 14:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0116
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0116
+	The time taken to complete this macroreplication was 194.67 s.
+
+Macroreplication 15:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0534
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0534
+	The time taken to complete this macroreplication was 195.02 s.
+
+Macroreplication 16:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9617
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9617
+	The time taken to complete this macroreplication was 194.93 s.
+
+Macroreplication 17:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0227
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0227
+	The time taken to complete this macroreplication was 194.77 s.
+
+Macroreplication 18:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0877
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0877
+	The time taken to complete this macroreplication was 195.06 s.
+
+Macroreplication 19:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0325
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0325
+	The time taken to complete this macroreplication was 195.33 s.
+
+Macroreplication 20:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0315
+	Budget: 100	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0315
+	The time taken to complete this macroreplication was 196.66 s.
