@@ -70,7 +70,7 @@ class OpenJackson(Model):
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": int,
-                "default": 1000
+                "default": 500
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
@@ -146,14 +146,16 @@ class OpenJackson(Model):
         -------
         responses : dict
             performance measures of interest
-            "average queue length": The time-average of queue length at each station
-            "expected queue length": The expected queue length calculated using stationary distribution
+            "average_queue_length": The time-average of queue length at each station
+            "expected_queue_length": The expected queue length calculated using stationary distribution
         """
         # Designate random number generators.
         arrival_rng = [rng_list[i] for i in range(self.factors["number_queues"])]
         transition_rng = [rng_list[i + self.factors["number_queues"]] for i in range(self.factors["number_queues"])]
         time_rng = [rng_list[i + 2*self.factors["number_queues"]] for i in range(self.factors["number_queues"])]
         initialization_rng = rng_list[-1]
+
+        variance = [[] for _ in range(self.factors["number_queues"])]
 
         def geometric(p):
             return math.floor(np.log(1 - initialization_rng.uniform(0,1)) / math.log(p))
@@ -235,6 +237,8 @@ class OpenJackson(Model):
             clock = min(next_arrival, next_completion)
             for i in range(self.factors['number_queues']):
                 time_sum_queue_length[i] += queues[i] * (clock - previous_clock)
+                variance[i].append(queues[i])
+            
 
             previous_clock = clock
 
@@ -265,16 +269,19 @@ class OpenJackson(Model):
         # end of simulation
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
+        gradient = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**2 for i in range(self.factors['number_queues'])]
 
-
-        responses = {"average_queue_length": average_queue_length, "expected_queue_length" :expected_queue_length}
-        gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in
-                     responses}
+        responses = {"average_queue_length": average_queue_length, "expected_queue_length" :expected_queue_length, "total_jobs": sum(average_queue_length)}
+        gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in responses}
+        
+        gradients['average_queue_length']['service_mus'] = tuple(gradient)
+        gradients['total_jobs']['service_mus'] = tuple(gradient)
+        
         return responses, gradients
 
 
 """
-Summary
+Summary(.)
 -------
 Minimize the expected total number of jobs in the system at a time
 """
@@ -357,7 +364,7 @@ class OpenJacksonMinQueue(Problem):
         self.minmax = (-1,)
         self.constraint_type = "deterministic"
         self.variable_type = "continuous"
-        self.gradient_available = False
+        self.gradient_available = True
         self.model_default_factors = {}
         self.model_decision_factors = {"service_mus"}
         self.factors = fixed_factors
@@ -382,7 +389,8 @@ class OpenJacksonMinQueue(Problem):
         }
         self.check_factor_list = {
             "initial_solution": self.check_initial_solution,
-            "budget": self.check_budget
+            "budget": self.check_budget,
+            "service_rates_budget": self.check_service_rates_budget
         }
         super().__init__(fixed_factors, model_fixed_factors)
         self.model = OpenJackson(self.model_fixed_factors)
@@ -397,6 +405,13 @@ class OpenJacksonMinQueue(Problem):
         self.optimal_value = None  # Change if f is changed.
         self.optimal_solution = None  # Change if f is changed.
 
+    def check_service_rates_budget(self):
+        routing_matrix = np.asarray(self.model.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
+        if sum(self.factors["service_rates_budget"]) < sum(lambdas) :
+            return False
+        return True
+            
 
     def vector_to_factor_dict(self, vector):
         """
@@ -432,7 +447,7 @@ class OpenJacksonMinQueue(Problem):
         vector : tuple
             vector of values associated with decision variables
         """
-        vector = tuple(factor_dict["service_mus"])
+        vector = (factor_dict["service_mus"],)
         return vector
 
     def response_dict_to_objectives(self, response_dict):
@@ -450,7 +465,10 @@ class OpenJacksonMinQueue(Problem):
         objectives : tuple
             vector of objectives
         """
-        objectives = (sum(response_dict["average_queue_length"]),)
+        if type(response_dict['total_jobs']) == tuple:
+            objectives = (response_dict['total_jobs'][0],)
+        else:
+            objectives = (response_dict['total_jobs'],)
         return objectives
 
     def response_dict_to_stoch_constraints(self, response_dict):
@@ -533,7 +551,7 @@ class OpenJacksonMinQueue(Problem):
         routing_matrix = np.asarray(self.model.factors["routing_matrix"])
         lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
         box_feasible = all(x[i] > lambdas[i] for i in range(self.model.factors['number_queues']))
-        upper_feasible = sum(x) < self.factors['service_rates_budget']
+        upper_feasible = (sum(x) <= self.factors['service_rates_budget'])
         return super().check_deterministic_constraints(x) * box_feasible * upper_feasible
 
     def get_random_solution(self, rand_sol_rng):

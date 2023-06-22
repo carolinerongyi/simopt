@@ -1,0 +1,175 @@
+./experiments/outputs/PGD_on_OPENJACKSON-1.pickle
+Problem: OPENJACKSON-1
+Solver: PGD
+
+Model Factors:
+	number_queues: 5
+	arrival_alphas: [2, 3, 2, 4, 3]
+	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.2, 0.1, 0, 0.1, 0.2], [0.1, 0.1, 0.1, 0, 0.2], [0.1, 0.1, 0.1, 0.1, 0.2]]
+	t_end: 500
+	warm_up: 200
+	steady_state_initialization: True
+
+Problem Factors:
+	initial_solution: [8.85, 9.45, 8.85, 11.63, 10.8]
+	budget: 100
+	service_rates_budget: 66
+
+Solver Factors:
+	crn_across_solns: True
+	r: 30
+	alpha: 0.2
+	beta: 0.9
+	alpha_max: 10.0
+	lambda: 2
+	tol: 1e-07
+	finite_diff_step: 1e-05
+
+20 macroreplications were run.
+200 postreplications were run at each recommended solution.
+
+The initial solution is (8.85, 9.45, 8.85, 11.63, 10.8). Its estimated objective is 10.0394.
+The proxy optimal solution is (12.5277, 12.879, 12.661, 14.2926, 13.6397). Its estimated objective is 5.0421.
+200 postreplications were taken at x0 and x_star.
+
+Macroreplication Results:
+
+Macroreplication 1:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0236
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0272
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0212
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0212
+	The time taken to complete this macroreplication was 31.68 s.
+
+Macroreplication 2:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0298
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0394
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0318
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0318
+	The time taken to complete this macroreplication was 32.17 s.
+
+Macroreplication 3:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9725
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0235
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0161
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0161
+	The time taken to complete this macroreplication was 32.51 s.
+
+Macroreplication 4:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0283
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0408
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0337
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0337
+	The time taken to complete this macroreplication was 31.33 s.
+
+Macroreplication 5:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.1577
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0785
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0711
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0711
+	The time taken to complete this macroreplication was 31.68 s.
+
+Macroreplication 6:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0083
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0261
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.019
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.019
+	The time taken to complete this macroreplication was 32.84 s.
+
+Macroreplication 7:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0347
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0421
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0352
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0352
+	The time taken to complete this macroreplication was 32.76 s.
+
+Macroreplication 8:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.015
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0389
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.031
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.031
+	The time taken to complete this macroreplication was 32.7 s.
+
+Macroreplication 9:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0787
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0492
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0417
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0417
+	The time taken to complete this macroreplication was 32.65 s.
+
+Macroreplication 10:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9909
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0195
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0127
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0127
+	The time taken to complete this macroreplication was 32.92 s.
+
+Macroreplication 11:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9994
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0253
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0177
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0177
+	The time taken to complete this macroreplication was 33.11 s.
+
+Macroreplication 12:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0299
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.032
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0243
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0243
+	The time taken to complete this macroreplication was 33.24 s.
+
+Macroreplication 13:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0474
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0357
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.028
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.028
+	The time taken to complete this macroreplication was 33.45 s.
+
+Macroreplication 14:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0434
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0385
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0315
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0315
+	The time taken to complete this macroreplication was 33.54 s.
+
+Macroreplication 15:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0606
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0432
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0359
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0359
+	The time taken to complete this macroreplication was 33.49 s.
+
+Macroreplication 16:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9445
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0108
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0036
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0036
+	The time taken to complete this macroreplication was 33.69 s.
+
+Macroreplication 17:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0082
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0332
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0255
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0255
+	The time taken to complete this macroreplication was 34.03 s.
+
+Macroreplication 18:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.1105
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.059
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0516
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0516
+	The time taken to complete this macroreplication was 33.57 s.
+
+Macroreplication 19:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 9.9884
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0282
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0203
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0203
+	The time taken to complete this macroreplication was 33.74 s.
+
+Macroreplication 20:
+	Budget: 30	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.0362
+	Budget: 60	Recommended Solution: (12.5897, 12.9032, 12.7329, 14.1964, 13.5779)	Estimated Objective: 5.0398
+	Budget: 90	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0319
+	Budget: 100	Recommended Solution: (12.5277, 12.879, 12.661, 14.2926, 13.6397)	Estimated Objective: 5.0319
+	The time taken to complete this macroreplication was 33.78 s.
