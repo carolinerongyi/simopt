@@ -579,3 +579,27 @@ class OpenJacksonMinQueue(Problem):
                                                                exact_sum=False
                                                                )
         return x
+    
+
+    # code for random graph that i used we may have to change it 
+
+# import networkx as nx
+# def generate_random_open_jackson(n,p):
+#     graph = nx.erdos_renyi_graph(n, p, seed=None, directed=True)
+#     edges = nx.edges(graph)
+#     matrix = np.zeros((n,n+1))
+#     for (i,j) in edges:
+#         matrix[i][j] = 1
+# #     print(matrix)   
+#     for i in range(n):
+#         a = int(sum(matrix[i]))+1
+# #         print(a)
+#         probs = np.random.dirichlet(np.ones(a),1)
+#         r = 0
+#         for j in range(n+1):
+#             if matrix[i][j]==1 or j == n:
+#                 matrix[i][j] = probs[0][r]
+#                 r += 1
+    
+# #     print(matrix)
+    # return matrix
