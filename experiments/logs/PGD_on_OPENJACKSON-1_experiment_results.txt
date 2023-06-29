@@ -1,0 +1,85 @@
+./experiments/outputs/PGD_on_OPENJACKSON-1.pickle
+Problem: OPENJACKSON-1
+Solver: PGD
+
+Model Factors:
+	number_queues: 5
+	arrival_alphas: [2, 3, 2, 4, 3]
+	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.2, 0.1, 0, 0.1, 0.2], [0.1, 0.1, 0.1, 0, 0.2], [0.1, 0.1, 0.1, 0.1, 0.2]]
+	t_end: 500
+	warm_up: 200
+	steady_state_initialization: True
+
+Problem Factors:
+	initial_solution: [8, 8, 8, 8, 8]
+	budget: 100
+	service_rates_budget: 100
+
+Solver Factors:
+	crn_across_solns: True
+	r: 30
+	alpha: 0.2
+	beta: 0.9
+	alpha_max: 10.0
+	lambda: 2
+	tol: 1e-07
+	finite_diff_step: 1e-05
+
+10 macroreplications were run.
+100 postreplications were run at each recommended solution.
+
+The initial solution is (8, 8, 8, 8, 8). Its estimated objective is 51.3701.
+The proxy optimal solution is (8, 8, 8, 8, 8). Its estimated objective is 51.3701.
+100 postreplications were taken at x0 and x_star.
+
+Macroreplication Results:
+
+Macroreplication 1:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 52.8433
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 52.8433
+	The time taken to complete this macroreplication was 36.88 s.
+
+Macroreplication 2:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 53.8793
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 53.8793
+	The time taken to complete this macroreplication was 36.43 s.
+
+Macroreplication 3:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 48.5172
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 48.5172
+	The time taken to complete this macroreplication was 36.56 s.
+
+Macroreplication 4:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 47.2552
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 47.2552
+	The time taken to complete this macroreplication was 35.08 s.
+
+Macroreplication 5:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 53.3411
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 53.3411
+	The time taken to complete this macroreplication was 36.92 s.
+
+Macroreplication 6:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 47.6161
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 47.6161
+	The time taken to complete this macroreplication was 36.37 s.
+
+Macroreplication 7:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 47.4958
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 47.4958
+	The time taken to complete this macroreplication was 43.11 s.
+
+Macroreplication 8:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 52.3689
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 52.3689
+	The time taken to complete this macroreplication was 35.6 s.
+
+Macroreplication 9:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 52.8217
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 52.8217
+	The time taken to complete this macroreplication was 36.52 s.
+
+Macroreplication 10:
+	Budget: 30	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 45.735
+	Budget: 100	Recommended Solution: (8, 8, 8, 8, 8)	Estimated Objective: 45.735
+	The time taken to complete this macroreplication was 36.12 s.
