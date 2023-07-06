@@ -79,7 +79,7 @@ class OpenJackson(Model):
         self.name = "OPENJACKSON"
         self.n_responses = 2
         self.random = random
-        self.n_random = 4  # Number of rng used for the random instance
+        self.n_random = 3  # Number of rng used for the random instance
         # random instance factors: number_queues, arrival_alphas, service_mus, routing_matrix
 
         self.factors = fixed_factors
@@ -172,23 +172,18 @@ class OpenJackson(Model):
         lambdas = self.calc_lambdas()
         return all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors['number_queues']))
     
-    def initialize_random(self, rng_list):
-        random_num_queue = rng_list[-1].randint(1, 15)
-        random_arrival = rng_list[-2].uniform(1, 10, random_num_queue)
-        print(random_arrival)
+    def initialize_random(self, random_rng):
+        random_num_queue = random_rng[0].randint(1, 15)
+        random_arrival = random_rng[1].uniform(1, 10, random_num_queue)
         # for now, generate a random matrix with dirichlet distribution
-        random_matrix = [rng_list[-3].dirichlet(np.ones(random_num_queue), size=random_num_queue) for _ in range(random_num_queue)]
+        random_matrix = [random_rng[2].dirichlet(np.ones(random_num_queue), size=random_num_queue) for _ in range(random_num_queue)]
         random_routing_matrix = np.asarray(random_matrix)
-        lambdas = np.linalg.inv(np.identity(random_num_queue) - random_routing_matrix.T) @ random_arrival
-        random_service = [0]*random_num_queue
-        for i in range(random_num_queue):
-            random_service[i] = rng_list[-4].uniform(lambdas[i], 2*lambdas[i])
         self.factors["number_queues"] = random_num_queue
         self.factors["arrival_alphas"] = random_arrival
         self.factors["routing_matrix"] = random_routing_matrix
-        self.factors["service_mus"] = random_service
 
         return
+    
     def attach_rng(self, random_rng):
         self.random_rng = random_rng
 
@@ -210,8 +205,6 @@ class OpenJackson(Model):
             "expected_queue_length": The expected queue length calculated using stationary distribution
         """
         # Designate random number generators.
-        if self.random:
-            self.initialize_random(rng_list)
         arrival_rng = [rng_list[i] for i in range(self.factors["number_queues"])]
         transition_rng = [rng_list[i + self.factors["number_queues"]] for i in range(self.factors["number_queues"])]
         time_rng = [rng_list[i + 2*self.factors["number_queues"]] for i in range(self.factors["number_queues"])]
@@ -415,7 +408,7 @@ class OpenJacksonMinQueue(Problem):
     --------
     base.Problem
     """
-    def __init__(self, name="OPENJACKSON-1", fixed_factors=None, model_fixed_factors=None):
+    def __init__(self, name="OPENJACKSON-1", fixed_factors=None, model_fixed_factors=None, random = False, random_rng = None):
         if fixed_factors is None:
             fixed_factors = {}
         if model_fixed_factors is None:
@@ -430,6 +423,8 @@ class OpenJacksonMinQueue(Problem):
         self.model_default_factors = {}
         self.model_decision_factors = {"service_mus"}
         self.factors = fixed_factors
+        self.random = random
+        self.n_rngs = 0
         
 
         self.specifications = {
@@ -455,7 +450,7 @@ class OpenJacksonMinQueue(Problem):
             "service_rates_budget": self.check_service_rates_budget
         }
         super().__init__(fixed_factors, model_fixed_factors)
-        self.model = OpenJackson(self.model_fixed_factors)
+        self.model = OpenJackson(self.model_fixed_factors, random)
         self.Ci = np.array([1 for _ in range(self.model.factors["number_queues"])])
         self.di = np.array([self.factors['service_rates_budget']])
         self.Ce = None
@@ -466,7 +461,14 @@ class OpenJacksonMinQueue(Problem):
         # Instantiate model with fixed factors and overwritten defaults.
         self.optimal_value = None  # Change if f is changed.
         self.optimal_solution = None  # Change if f is changed.
+        if random and random_rng:
+            self.model.attach_rng(random_rng)
 
+    def attach_rngs(self, random_rng):
+        self.random_rng = random_rng
+        self.model.attach_rng(random_rng)
+        return random_rng
+    
     def check_service_rates_budget(self):
         routing_matrix = np.asarray(self.model.factors["routing_matrix"])
         lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]

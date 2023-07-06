@@ -143,8 +143,94 @@ class SAN(Model):
         dfs(1,[1],output)
         return output
     
+    def get_arcs(self, arcs, num_nodes, num_arcs, set_arcs, uni_rng):
+        remove = []    
+        def get_in(arcs, num_nodes, ind, in_ind=True):
+            global remove
+            if len(arcs) <= 0:
+                return False            
+            graph = {node: set() for node in range(1, num_nodes + 1)}
+            for a in arcs:
+                if in_ind == True:
+                    graph[a[0]].add(a[1])
+                else:
+                    graph[a[1]].add(a[0])
+            set0 = graph[ind]
+            for i in graph[ind]:
+                set0 = {*set0, *graph[i]}
+                for j in graph[i]:
+                    set0 = {*set0, *graph[j]}
+            
+            if in_ind == True:      
+                for j in set0 - graph[ind]:
+                    if j in graph[ind]:
+                        remove.append((ind, j))
+            
+            set0 = {*set0, ind}
+            return set0
+        
+        set0 = get_in(arcs, num_nodes, 1)
+        for i in range(2, num_nodes+1):
+            set0 = get_in(arcs, num_nodes, 1)
+            if i not in set0:
+                # print(i)
+                set1 = list(get_in(arcs, num_nodes, i, False))
+                # print(arcs)
+                
+                n2 = set1[uni_rng.randint(0, len(set1)-1)]
+                # print(set1)
+                set2 = [i for i in set0 if i < n2]
+                n1 = list(set2)[uni_rng.randint(0, len(set2)-1)]
+                
+                arc = (n1, n2)
+                arcs = {*arcs, arc}
+        
+        for i in range(2, num_nodes):
+            set9 = get_in(arcs, num_nodes, i)
+            if num_nodes not in set9:
+                # print(i)
+                # print('reachable: ',set9)
+                set_out = list(get_in(arcs, num_nodes, num_nodes, False))
+                n1 = list(set9)[uni_rng.randint(0, len(set9)-1)]
+                set2 = [i for i in set_out if i > n1]
+                n2 = set2[uni_rng.randint(0, len(set2)-1)]
+                arc = (n1, n2)
+                arcs = {*arcs, arc}
+                # print('arcs', arcs)
+        
+        if len(arcs) < num_arcs:
+            remain_num = num_arcs - len(arcs)
+            remain = list(set(set_arcs) - set(arcs))
+            idx = uni_rng.sample(range(0, len(remain)), remain_num)
+            aa = set([remain[i] for i in idx])
+            arcs = {*arcs, *aa}     
+                        
+        elif len(arcs) > num_arcs:
+            remain_num = len(arcs) - num_arcs
+            # print('remove: ',remove)
+            if len(remove) < remain_num:
+                print('invalid')
+                return False
+            else:
+                idx = uni_rng.sample(range(0, len(remain)), remain_num)
+                remove_set = set([remove[i] for i in idx])
+                arcs = arcs - remove_set
+
+        else:
+            return list(arcs)
+        
+        return list(arcs)
+    
     def attach_rng(self, random_rng):
         self.random_rng = random_rng
+        
+        arcs_set = [(1, 2), (8, 9)]
+        # arcs_set = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9)]
+        arcs_set = self.get_arcs(arcs_set, self.factors["num_nodes"], self.factors["num_arcs"], self.factors["set_arcs"], random_rng[0])
+        
+        arcs_set.sort(key=lambda a: a[1])
+        arcs_set.sort(key=lambda a: a[0])  
+        self.factors["arcs"] = arcs_set
 
     # def replicate(self, rng_list, rng_random):
     def replicate(self, rng_list):
@@ -172,91 +258,91 @@ class SAN(Model):
         if self.random == True:
             uni_rng = rng_list[-1]
             
-            def get_arcs(arcs, num_nodes, num_arcs, set_arcs):
-                remove = []    
-                def get_in(arcs, num_nodes, ind, in_ind=True):
-                    global remove
-                    if len(arcs) <= 0:
-                        return False            
-                    graph = {node: set() for node in range(1, num_nodes + 1)}
-                    for a in arcs:
-                        if in_ind == True:
-                            graph[a[0]].add(a[1])
-                        else:
-                            graph[a[1]].add(a[0])
-                    set0 = graph[ind]
-                    for i in graph[ind]:
-                        set0 = {*set0, *graph[i]}
-                        for j in graph[i]:
-                            set0 = {*set0, *graph[j]}
+            # def get_arcs(arcs, num_nodes, num_arcs, set_arcs):
+            #     remove = []    
+            #     def get_in(arcs, num_nodes, ind, in_ind=True):
+            #         global remove
+            #         if len(arcs) <= 0:
+            #             return False            
+            #         graph = {node: set() for node in range(1, num_nodes + 1)}
+            #         for a in arcs:
+            #             if in_ind == True:
+            #                 graph[a[0]].add(a[1])
+            #             else:
+            #                 graph[a[1]].add(a[0])
+            #         set0 = graph[ind]
+            #         for i in graph[ind]:
+            #             set0 = {*set0, *graph[i]}
+            #             for j in graph[i]:
+            #                 set0 = {*set0, *graph[j]}
                     
-                    if in_ind == True:      
-                        for j in set0 - graph[ind]:
-                            if j in graph[ind]:
-                                remove.append((ind, j))
+            #         if in_ind == True:      
+            #             for j in set0 - graph[ind]:
+            #                 if j in graph[ind]:
+            #                     remove.append((ind, j))
                     
-                    set0 = {*set0, ind}
-                    return set0
+            #         set0 = {*set0, ind}
+            #         return set0
                 
-                set0 = get_in(arcs, num_nodes, 1)
-                for i in range(2, num_nodes+1):
-                    set0 = get_in(arcs, num_nodes, 1)
-                    if i not in set0:
-                        # print(i)
-                        set1 = list(get_in(arcs, num_nodes, i, False))
-                        # print(arcs)
+            #     set0 = get_in(arcs, num_nodes, 1)
+            #     for i in range(2, num_nodes+1):
+            #         set0 = get_in(arcs, num_nodes, 1)
+            #         if i not in set0:
+            #             # print(i)
+            #             set1 = list(get_in(arcs, num_nodes, i, False))
+            #             # print(arcs)
                         
-                        n2 = set1[uni_rng.randint(0, len(set1)-1)]
-                        # print(set1)
-                        set2 = [i for i in set0 if i < n2]
-                        n1 = list(set2)[uni_rng.randint(0, len(set2)-1)]
+            #             n2 = set1[uni_rng.randint(0, len(set1)-1)]
+            #             # print(set1)
+            #             set2 = [i for i in set0 if i < n2]
+            #             n1 = list(set2)[uni_rng.randint(0, len(set2)-1)]
                         
-                        arc = (n1, n2)
-                        arcs = {*arcs, arc}
+            #             arc = (n1, n2)
+            #             arcs = {*arcs, arc}
                 
-                for i in range(2, num_nodes):
-                    set9 = get_in(arcs, num_nodes, i)
-                    if num_nodes not in set9:
-                        # print(i)
-                        # print('reachable: ',set9)
-                        set_out = list(get_in(arcs, num_nodes, num_nodes, False))
-                        n1 = list(set9)[uni_rng.randint(0, len(set9)-1)]
-                        set2 = [i for i in set_out if i > n1]
-                        n2 = set2[uni_rng.randint(0, len(set2)-1)]
-                        arc = (n1, n2)
-                        arcs = {*arcs, arc}
-                        # print('arcs', arcs)
+            #     for i in range(2, num_nodes):
+            #         set9 = get_in(arcs, num_nodes, i)
+            #         if num_nodes not in set9:
+            #             # print(i)
+            #             # print('reachable: ',set9)
+            #             set_out = list(get_in(arcs, num_nodes, num_nodes, False))
+            #             n1 = list(set9)[uni_rng.randint(0, len(set9)-1)]
+            #             set2 = [i for i in set_out if i > n1]
+            #             n2 = set2[uni_rng.randint(0, len(set2)-1)]
+            #             arc = (n1, n2)
+            #             arcs = {*arcs, arc}
+            #             # print('arcs', arcs)
                 
-                if len(arcs) < num_arcs:
-                    remain_num = num_arcs - len(arcs)
-                    remain = list(set(set_arcs) - set(arcs))
-                    idx = uni_rng.sample(range(0, len(remain)), remain_num)
-                    aa = set([remain[i] for i in idx])
-                    arcs = {*arcs, *aa}     
+            #     if len(arcs) < num_arcs:
+            #         remain_num = num_arcs - len(arcs)
+            #         remain = list(set(set_arcs) - set(arcs))
+            #         idx = uni_rng.sample(range(0, len(remain)), remain_num)
+            #         aa = set([remain[i] for i in idx])
+            #         arcs = {*arcs, *aa}     
                                 
-                elif len(arcs) > num_arcs:
-                    remain_num = len(arcs) - num_arcs
-                    # print('remove: ',remove)
-                    if len(remove) < remain_num:
-                        print('invalid')
-                        return False
-                    else:
-                        idx = uni_rng.sample(range(0, len(remain)), remain_num)
-                        remove_set = set([remove[i] for i in idx])
-                        arcs = arcs - remove_set
+            #     elif len(arcs) > num_arcs:
+            #         remain_num = len(arcs) - num_arcs
+            #         # print('remove: ',remove)
+            #         if len(remove) < remain_num:
+            #             print('invalid')
+            #             return False
+            #         else:
+            #             idx = uni_rng.sample(range(0, len(remain)), remain_num)
+            #             remove_set = set([remove[i] for i in idx])
+            #             arcs = arcs - remove_set
 
-                else:
-                    return list(arcs)
+            #     else:
+            #         return list(arcs)
                 
-                return list(arcs)
+            #     return list(arcs)
             
-            arcs_set = [(1, 2), (8, 9)]
-            # arcs_set = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9)]
-            arcs_set = get_arcs(arcs_set, self.factors["num_nodes"], self.factors["num_arcs"], self.factors["set_arcs"])
+            # arcs_set = [(1, 2), (8, 9)]
+            # # arcs_set = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9)]
+            # arcs_set = get_arcs(arcs_set, self.factors["num_nodes"], self.factors["num_arcs"], self.factors["set_arcs"])
             
-            arcs_set.sort(key=lambda a: a[1])
-            arcs_set.sort(key=lambda a: a[0])  
-            self.factors["arcs"] = arcs_set
+            # arcs_set.sort(key=lambda a: a[1])
+            # arcs_set.sort(key=lambda a: a[0])  
+            # self.factors["arcs"] = arcs_set
             # self.factors["arc_means"] = (1, ) * len(arcs_set)
             # print('  ')
             # print("arcs in the graph: ",self.factors["arcs"])
@@ -292,51 +378,49 @@ class SAN(Model):
             arc_length[str(self.factors["arcs"][i])] = exp_rng.expovariate(1 / self.factors["arc_means"][i])
 
         ## Calculate the length of the longest path.
-        T = np.zeros(self.factors["num_nodes"])
-        prev = np.zeros(self.factors["num_nodes"])
-        for i in range(1, self.factors["num_nodes"]):
-            vi = topo_order[i - 1]
-            for j in graph_out[vi]:
-                if T[j - 1] < T[vi - 1] + arc_length[str((vi, j))]:
-                    T[j - 1] = T[vi - 1] + arc_length[str((vi, j))]
-                    prev[j - 1] = vi
-        longest_path = T[self.factors["num_nodes"] - 1]
+        # T = np.zeros(self.factors["num_nodes"])
+        # prev = np.zeros(self.factors["num_nodes"])
+        # for i in range(1, self.factors["num_nodes"]):
+        #     vi = topo_order[i - 1]
+        #     for j in graph_out[vi]:
+        #         if T[j - 1] < T[vi - 1] + arc_length[str((vi, j))]:
+        #             T[j - 1] = T[vi - 1] + arc_length[str((vi, j))]
+        #             prev[j - 1] = vi
+        # longest_path = T[self.factors["num_nodes"] - 1]
         
-        #find all paths from the starter node to end node (2nd way)
-        # allpaths = self.allPathsStartEnd(graph_out)
-        # L = []
-        # for p in allpaths:
-        #     l = 0
-        #     for j in range(len(p)-1):
-        #         l += arc_length[str((p[j], p[j+1]))]
-        #     L.append(l)
-        # longest_path = np.max(L)
-        # longest_P = allpaths[np.argmax(L)]
+        allpaths = self.allPathsStartEnd(graph_out)
+        L = []
+        for p in allpaths:
+            l = 0
+            for j in range(len(p)-1):
+                l += arc_length[str((p[j], p[j+1]))]
+            L.append(l)
+        longest_path = np.max(L)
+        longest_P = allpaths[np.argmax(L)]
         # print(' ')
         # print('longest path: ', longest_P)
         
-        # gradient = np.zeros(len(self.factors["arcs"]))
+        gradient = np.zeros(len(self.factors["arcs"]))
 
-        # for i in range(len(longest_P)-1,0,-1):
-        #     backtrack = longest_P[i-1]
-        #     current = longest_P[i]
-        #     idx = self.factors["arcs"].index((backtrack, current))
-        #     # print(idx)
-        #     gradient[idx] = arc_length[str((backtrack, current))] / (self.factors["arc_means"][idx])
-        #######
+        for i in range(len(longest_P)-1,0,-1):
+            backtrack = longest_P[i-1]
+            current = longest_P[i]
+            idx = self.factors["arcs"].index((backtrack, current))
+            gradient[idx] = arc_length[str((backtrack, current))] / (self.factors["arc_means"][idx])
 
         # Calculate the IPA gradient w.r.t. arc means.
         # If an arc is on the longest path, the component of the gradient
         # is the length of the length of that arc divided by its mean.
         # If an arc is not on the longest path, the component of the gradient is zero.
-        gradient = np.zeros(len(self.factors["arcs"]))
-        current = topo_order[-1]
-        backtrack = int(prev[self.factors["num_nodes"] - 1])
-        while current != topo_order[0]:
-            idx = self.factors["arcs"].index((backtrack, current))
-            gradient[idx] = arc_length[str((backtrack, current))] / (self.factors["arc_means"][idx])
-            current = backtrack
-            backtrack = int(prev[backtrack - 1])
+        
+        # gradient = np.zeros(len(self.factors["arcs"]))
+        # current = topo_order[-1]
+        # backtrack = int(prev[self.factors["num_nodes"] - 1])
+        # while current != topo_order[0]:
+        #     idx = self.factors["arcs"].index((backtrack, current))
+        #     gradient[idx] = arc_length[str((backtrack, current))] / (self.factors["arc_means"][idx])
+        #     current = backtrack
+        #     backtrack = int(prev[backtrack - 1])
 
         # Compose responses and gradients.
         responses = {"longest_path_length": longest_path}
@@ -417,7 +501,7 @@ class SANLongestPath(Problem):
     --------
     base.Problem
     """
-    def __init__(self, name="SAN-1", fixed_factors=None, model_fixed_factors=None, random=False):
+    def __init__(self, name="SAN-1", fixed_factors=None, model_fixed_factors=None, random=False, random_rng=None):
         if fixed_factors is None:
             fixed_factors = {}
         if model_fixed_factors is None:
@@ -463,6 +547,8 @@ class SANLongestPath(Problem):
         super().__init__(fixed_factors, model_fixed_factors)
         # Instantiate model with fixed factors and over-riden defaults.
         self.model = SAN(self.model_fixed_factors, random)
+        if random==True and random_rng != None:
+            self.model.attach_rng(random_rng)
         self.dim = len(self.model.factors["arcs"])
         self.lower_bounds = (1e-2,) * self.dim
         self.upper_bounds = (np.inf,) * self.dim
@@ -506,31 +592,7 @@ class SANLongestPath(Problem):
         """
         vector = tuple(factor_dict["arc_means"])
         return vector
-    
-    # def attach_rngs(self, rng_list):
-    #     """Attach a list of random-number generators to the problem.
-
-    #     Parameters
-    #     ----------
-    #     rng_list : list [``mrg32k3a.mrg32k3a.MRG32k3a``]
-    #         List of random-number generators used to generate a random initial solution
-    #         or a random problem instance.
-    #     """
-    #     self.rng_list = rng_list
-    #     if self.random == True:
-    #         model_factors = {}
-    #         for i in self.model.specifications:
-    #             for j in range(len(i)):
-    #                 # generate each entry in i, and replace the i[j] by the random number...
-    #                 generate
-    #             model_factors[i] = i ###
-    #         self.model_fixed_factors = model_factors
-    #         for i in self.specifications:
-    #             for j in range(len(i)):
-    #                 Generator
-    #             self.factors[i] = i ###
-            
-                    
+                       
     def attach_rngs(self, random_rng):
         self.random_rng = random_rng
         self.model.attach_rng(random_rng)

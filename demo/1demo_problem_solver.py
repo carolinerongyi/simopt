@@ -7,11 +7,12 @@ macroreplications of the solver on the problem.
 import sys
 import os.path as o
 import os
+sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
 sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
 
 # Import the ProblemSolver class and other useful functions
 from simopt.experiment_base import ProblemSolver, read_experiment_results, post_normalize, plot_progress_curves, plot_solvability_cdfs
-from rng.mrg32k3a import MRG32k3a
+from mrg32k3a.mrg32k3a import MRG32k3a
 
 # !! When testing a new solver/problem, first go to directory.py.
 # See directory.py for more details.
@@ -19,10 +20,11 @@ from rng.mrg32k3a import MRG32k3a
 
 # -----------------------------------------------
 solver_name = "RNDSRCH"  # Random search solver
-problem_name = "SAN-1"
+problem_name = "OPENJACKSON-1"   #"SAN-1"
 # -----------------------------------------------
 
-from simopt.models.san_2 import SANLongestPath
+from simopt.models.openjackson import OpenJacksonMinQueue
+from simopt.models.openjackson import OpenJackson
 
 def rebase(random_rng, n):
     new_rngs = []
@@ -37,26 +39,30 @@ def rebase(random_rng, n):
 # n_inst = 5
 
 n_inst = int(input('Please enter the number of instance you want to generate: '))
-random = input('Please decide whether you want to generate random instances or determinent instances (True/False): ')
+rand = bool(input('Please decide whether you want to generate random instances or determinent instances (True/False): '))
 
-
-myproblem = SANLongestPath(random=random)
+myproblem = OpenJacksonMinQueue(random=True)
+# myproblem = SMF_Max(random=True)
 
 random_rng = [MRG32k3a(s_ss_sss_index=[2, ss + 4, 0]) for ss in range(myproblem.model.n_random, myproblem.model.n_random + myproblem.n_rngs)]
 rng_list = [MRG32k3a(s_ss_sss_index=[0, ss, 0]) for ss in range(myproblem.model.n_rngs)]
 rng_list2 = [MRG32k3a(s_ss_sss_index=[2, 4 + ss, 0]) for ss in range(myproblem.model.n_random)]
-rng_list = [* rng_list, * rng_list2]
+# rng_list = [* rng_list, * rng_list2]
+
 
 # Generate 5 random problem instances
 for i in range(n_inst):
-    x = (8,) * 13
     random_rng = rebase(random_rng, i)
+    rng_list2 = rebase(rng_list2, i)
+    # myproblem = SMF_Max(random=rand, random_rng=rng_list2)
+    myproblem = OpenJacksonMinQueue(random=rand, random_rng=rng_list2)
     myproblem.attach_rngs(random_rng)
-    problem_name = 'SAN_' + str(i)
+    problem_name = 'OPENJACKSON_' + str(i)
     print('-------------------------------------------------------')
 
     print(f"Testing solver {solver_name} on problem {problem_name}.")
-
+    
+    print('  ')
     # Specify file path name for storing experiment outputs in .pickle file.
     file_name_path = "experiments/outputs/" + solver_name + "_on_" + problem_name + ".pickle"
     print(f"Results will be stored as {file_name_path}.")
