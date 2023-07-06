@@ -10,9 +10,10 @@ from ..base import Model, Problem
 
 # generates an erdos renyi graph where each subgraph has an exit 
 def erdos_renyi(rng, n, p, directed = True):
-    # Not sure if this is the right syntax for a uniform (n, n+1) shape matrix
-    graph = rng.uniform(n,n+1) 
-    graph = graph < p
+     
+    graph = np.random.uniform(size =(n,n+1))    ###### Need to change to rng from list
+    graph = np.where(graph<p,1,0)
+    print(graph)
     if not directed:
         graph = np.triu(graph)
 
@@ -21,18 +22,27 @@ def erdos_renyi(rng, n, p, directed = True):
     has_exit = set()
     checked = False
     while(not checked):
-        numexitable = has_exit.len
+        numexitable = len(has_exit)
         for i in range(n):
-            if graph[i][-1] == 1 or (graph[i][neighbor] for neighbor in has_exit):
+            if (graph[i][-1]) == 1: 
                 has_exit.add(i)
-        afternumexitable = has_exit.len
-        checked = (has_exit.len == n or numexitable == afternumexitable)
+                print("add original", has_exit)
+            if len(has_exit) > 0:
+                has_exit2 = []
+                for j in has_exit:
+                    if graph[i][j] == 1 :
+                        has_exit2 += [i]
+                for a in has_exit2:
+                    has_exit.add(a)
+                    print("add adjacent", has_exit)
+        afternumexitable = len(has_exit)
+        checked = (afternumexitable == n or numexitable == afternumexitable)
     # if the graph has nodes that have no path out then add a path out to those nodes
-    if has_exit.len != n:
+    if len(has_exit) != n:
         for x in set(range(n)).difference(has_exit):
             graph[x][-1] = 1 
 
-    return graph 
+    return graph
 
 
 class OpenJackson(Model):
