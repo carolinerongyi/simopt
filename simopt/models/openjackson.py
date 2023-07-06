@@ -8,6 +8,33 @@ import math as math
 
 from ..base import Model, Problem
 
+# generates an erdos renyi graph where each subgraph has an exit 
+def erdos_renyi(rng, n, p, directed = True):
+    # Not sure if this is the right syntax for a uniform (n, n+1) shape matrix
+    graph = rng.uniform(n,n+1) 
+    graph = graph < p
+    if not directed:
+        graph = np.triu(graph)
+
+    #check for exits in each subgraph if there are not valid exits 
+    # then create a new erdos_renyi graph until one is valid
+    has_exit = set()
+    checked = False
+    while(not checked):
+        numexitable = has_exit.len
+        for i in range(n):
+            if graph[i][-1] == 1 or (graph[i][neighbor] for neighbor in has_exit):
+                has_exit.add(i)
+        afternumexitable = has_exit.len
+        checked = (has_exit.len == n or numexitable == afternumexitable)
+    # if the graph has nodes that have no path out then add a path out to those nodes
+    if has_exit.len != n:
+        for x in set(range(n)).difference(has_exit):
+            graph[x][-1] = 1 
+
+    return graph 
+
+
 class OpenJackson(Model):
     """
     A model of an open jackson network .
@@ -138,6 +165,7 @@ class OpenJackson(Model):
     def initialize_random(self, rng_list):
         random_num_queue = rng_list[-1].randint(1, 15)
         random_arrival = rng_list[-2].uniform(1, 10, random_num_queue)
+        print(random_arrival)
         # for now, generate a random matrix with dirichlet distribution
         random_matrix = [rng_list[-3].dirichlet(np.ones(random_num_queue), size=random_num_queue) for _ in range(random_num_queue)]
         random_routing_matrix = np.asarray(random_matrix)
