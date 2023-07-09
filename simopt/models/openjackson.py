@@ -177,10 +177,9 @@ class OpenJackson(Model):
         random_arrival = random_rng[1].uniform(1, 10, random_num_queue)
         # for now, generate a random matrix with dirichlet distribution
         random_matrix = erdos_renyi(random_rng[2], random_num_queue,random_arrival)
-        random_matrix = [random_rng[2].dirichlet(np.ones(random_num_queue), size=random_num_queue) for _ in range(random_num_queue)]
         for i in range(random_num_queue):
             a = int(sum(random_matrix[i]))+1
-            probs = np.random.dirichlet(np.ones(a),1)
+            probs = random_rng[2].dirichlet(np.ones(a),1)
             r = 0
             for j in range(random_num_queue+1):
                 if random_matrix[i][j]==1 or j == random_num_queue:
