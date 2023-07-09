@@ -13,7 +13,7 @@ def erdos_renyi(rng, n, p, directed = True):
      
     graph = np.random.uniform(size =(n,n+1))    ###### Need to change to rng from list
     graph = np.where(graph<p,1,0)
-    print(graph)
+    # print(graph)
     if not directed:
         graph = np.triu(graph)
 
@@ -26,7 +26,7 @@ def erdos_renyi(rng, n, p, directed = True):
         for i in range(n):
             if (graph[i][-1]) == 1: 
                 has_exit.add(i)
-                print("add original", has_exit)
+                # print("add original", has_exit)
             if len(has_exit) > 0:
                 has_exit2 = []
                 for j in has_exit:
@@ -34,7 +34,7 @@ def erdos_renyi(rng, n, p, directed = True):
                         has_exit2 += [i]
                 for a in has_exit2:
                     has_exit.add(a)
-                    print("add adjacent", has_exit)
+                    # print("add adjacent", has_exit)
         afternumexitable = len(has_exit)
         checked = (afternumexitable == n or numexitable == afternumexitable)
     # if the graph has nodes that have no path out then add a path out to those nodes
@@ -176,7 +176,17 @@ class OpenJackson(Model):
         random_num_queue = random_rng[0].randint(1, 15)
         random_arrival = random_rng[1].uniform(1, 10, random_num_queue)
         # for now, generate a random matrix with dirichlet distribution
+        random_matrix = erdos_renyi(random_rng[2], random_num_queue,random_arrival)
         random_matrix = [random_rng[2].dirichlet(np.ones(random_num_queue), size=random_num_queue) for _ in range(random_num_queue)]
+        for i in range(random_num_queue):
+            a = int(sum(random_matrix[i]))+1
+            probs = np.random.dirichlet(np.ones(a),1)
+            r = 0
+            for j in range(n+1):
+                if random_matrix[i][j]==1 or j == random_num_queue:
+                    random_matrix[i][j] = probs[0][r]
+                r += 1
+                
         random_routing_matrix = np.asarray(random_matrix)
         self.factors["number_queues"] = random_num_queue
         self.factors["arrival_alphas"] = random_arrival
