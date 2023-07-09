@@ -44,12 +44,14 @@ class MM1Queue(Model):
     --------
     base.Model
     """
-    def __init__(self, fixed_factors=None):
+    def __init__(self, fixed_factors=None, random = False):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "MM1"
+        self.random = random
         self.n_rngs = 2
         self.n_responses = 3
+        self.n_random = 2 # lambda and people
         self.specifications = {
             "lambda": {
                 "description": "rate parameter of interarrival time distribution",
@@ -97,6 +99,11 @@ class MM1Queue(Model):
         # demo for condition that queue must be stable
         # return self.factors["mu"] > self.factors["lambda"]
         return True
+    
+    def attach_rng(self, random_rng):
+        self.random_rng = random_rng
+
+    def initialize_random(self, )
 
     def replicate(self, rng_list):
         """
