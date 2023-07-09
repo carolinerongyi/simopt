@@ -182,7 +182,7 @@ class OpenJackson(Model):
             a = int(sum(random_matrix[i]))+1
             probs = np.random.dirichlet(np.ones(a),1)
             r = 0
-            for j in range(n+1):
+            for j in range(random_num_queue+1):
                 if random_matrix[i][j]==1 or j == random_num_queue:
                     random_matrix[i][j] = probs[0][r]
                 r += 1
