@@ -7,13 +7,14 @@ macroreplications of each problem-solver pair.
 import sys
 import os.path as o
 import os
+sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
 sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
 
 # Import the ProblemsSolvers class and other useful functions
 from simopt.experiment_base import ProblemsSolvers, plot_solvability_profiles
-from simopt.models.san_2 import SANLongestPath
-from simopt.models.smf import SMF_Max
-from rng.mrg32k3a import MRG32k3a
+from simopt.models.openjackson import OpenJacksonMinQueue
+from simopt.models.openjackson import OpenJackson
+from mrg32k3a.mrg32k3a import MRG32k3a
 from simopt.solvers import randomsearch, astrodf, neldmd
 from simopt.base import Solution
 
@@ -30,9 +31,9 @@ solver_names = ["RNDSRCH", "ASTRODF", "NELDMD"]
 solvers = [randomsearch, astrodf, neldmd]
 
 # solver_names = ["RNDSRCH"]
-problem_set = [SANLongestPath, SMF_Max]
-xx = [(8,)*13, (1,)*20]
-rands = [True, True]
+problem_set = [OpenJacksonMinQueue]
+xx = [(8.85,9.45,8.85,11.63,10.8)]
+rands = [True]
 
 
 problem_index = [int(i) for i in input('Please enter the indices of problems you want to generate and separate by white space (start from 0): ').split()]
@@ -97,62 +98,61 @@ for i in range(len(L_num)):
         
 
 
-# # Initialize an instance of the experiment class.
-# mymetaexperiment = ProblemsSolvers(solver_names=solver_names, problems = problems)
+# Initialize an instance of the experiment class.
+mymetaexperiment = ProblemsSolvers(solver_names=solver_names, problems = problems)
 
-# # Run a fixed number of macroreplications of each solver on each problem.
-# mymetaexperiment.run(n_macroreps=1)
-
-
-# print("Post-processing results.")
-# # Run a fixed number of postreplications at all recommended solutions.
-# mymetaexperiment.post_replicate(n_postreps=50)
-# # Find an optimal solution x* for normalization.
-# mymetaexperiment.post_normalize(n_postreps_init_opt=50)
-
-# print("Plotting results.")
-# # print("Optimal solution: ",mymetaexperiment.xstar)
-# # Produce basic plots of the solvers on the problems.
-# plot_solvability_profiles(experiments=mymetaexperiment.experiments, plot_type="cdf_solvability")
-
-# # Plots will be saved in the folder experiments/plots.
-# print("Finished. Plots can be found in experiments/plots folder.")
+# Run a fixed number of macroreplications of each solver on each problem.
+mymetaexperiment.run(n_macroreps=1)
 
 
+print("Post-processing results.")
+# Run a fixed number of postreplications at all recommended solutions.
+mymetaexperiment.post_replicate(n_postreps=50)
+# Find an optimal solution x* for normalization.
+mymetaexperiment.post_normalize(n_postreps_init_opt=50)
+
+print("Plotting results.")
+# print("Optimal solution: ",mymetaexperiment.xstar)
+# Produce basic plots of the solvers on the problems.
+plot_solvability_profiles(experiments=mymetaexperiment.experiments, plot_type="cdf_solvability")
+
+# Plots will be saved in the folder experiments/plots.
+print("Finished. Plots can be found in experiments/plots folder.")
 
 
 
-print('initial: ', initials)
-for i in range(len(problems)):
-    mysolution = Solution(initials[i], problems[i])
-    mysolution.attach_rngs(rng_lists[i], copy=False)
-    n_reps = 1
-    problems[i].simulate(mysolution, m=n_reps)
+
+
+# print('initial: ', initials)
+# for i in range(len(problems)):
+#     mysolution = Solution(initials[i], problems[i])
+#     mysolution.attach_rngs(rng_lists[i], copy=False)
+#     n_reps = 1
+#     problems[i].simulate(mysolution, m=n_reps)
     
-    print('arcs: ', problems[i].model.factors["arcs"])
-    print(mysolution.objectives_mean[0])
-    print(type(mysolution))
+#     print(mysolution.objectives_mean[0])
+#     print(type(mysolution))
 
-    # print("Objective coefficients: ", myproblem.factors["c"])  # For SAN
+#     # print("Objective coefficients: ", myproblem.factors["c"])  # For SAN
 
-    print(f"Ran {n_reps} replications of the {problems[i].name} problem at solution x = {x}.\n")
+#     print(f"Ran {n_reps} replications of the {problems[i].name} problem at solution x = {x}.\n")
         
-    print("The individual observations of the objective were:")
-    for idx in range(n_reps):
-        print(f"\t {round(mysolution.objectives[idx][0], 4)}")
-    if problems[i].gradient_available:
-        print("\nThe individual observations of the gradients of the objective were:")
-        for idx in range(n_reps):
-            print(f"\t {[round(g, 4) for g in mysolution.objectives_gradients[idx][0]]}")
-    else:
-        print("\nThis problem has no known gradients.")
-    if problems[i].n_stochastic_constraints > 0:
-        print(f"\nThis problem has {problems[i].n_stochastic_constraints} stochastic constraints of the form E[LHS] <= 0.")
-        for stc_idx in range(problems[i].n_stochastic_constraints):
-            print(f"\tFor stochastic constraint #{stc_idx + 1}, the mean of the LHS was {round(mysolution.stoch_constraints_mean[stc_idx], 4)} with standard error {round(mysolution.stoch_constraints_stderr[stc_idx], 4)}.")
-            print("\tThe observations of the LHSs were:")
-            for idx in range(n_reps):
-                print(f"\t\t {round(mysolution.stoch_constraints[idx][stc_idx], 4)}")
-    else:
-        print("\nThis problem has no stochastic constraints.")
+#     print("The individual observations of the objective were:")
+#     for idx in range(n_reps):
+#         print(f"\t {round(mysolution.objectives[idx][0], 4)}")
+#     if problems[i].gradient_available:
+#         print("\nThe individual observations of the gradients of the objective were:")
+#         for idx in range(n_reps):
+#             print(f"\t {[round(g, 4) for g in mysolution.objectives_gradients[idx][0]]}")
+#     else:
+#         print("\nThis problem has no known gradients.")
+#     if problems[i].n_stochastic_constraints > 0:
+#         print(f"\nThis problem has {problems[i].n_stochastic_constraints} stochastic constraints of the form E[LHS] <= 0.")
+#         for stc_idx in range(problems[i].n_stochastic_constraints):
+#             print(f"\tFor stochastic constraint #{stc_idx + 1}, the mean of the LHS was {round(mysolution.stoch_constraints_mean[stc_idx], 4)} with standard error {round(mysolution.stoch_constraints_stderr[stc_idx], 4)}.")
+#             print("\tThe observations of the LHSs were:")
+#             for idx in range(n_reps):
+#                 print(f"\t\t {round(mysolution.stoch_constraints[idx][stc_idx], 4)}")
+#     else:
+#         print("\nThis problem has no stochastic constraints.")
 

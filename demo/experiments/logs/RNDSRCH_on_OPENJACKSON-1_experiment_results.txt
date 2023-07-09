@@ -1,0 +1,36 @@
+./experiments/outputs/RNDSRCH_on_OPENJACKSON-1.pickle
+Problem: OPENJACKSON-1
+Solver: RNDSRCH
+
+Model Factors:
+	number_queues: 5
+	arrival_alphas: [2, 3, 2, 4, 3]
+	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.2, 0.1, 0, 0.1, 0.2], [0.1, 0.1, 0.1, 0, 0.2], [0.1, 0.1, 0.1, 0.1, 0.2]]
+	t_end: 500
+	warm_up: 200
+	steady_state_initialization: True
+
+Problem Factors:
+	initial_solution: [8.85, 9.45, 8.85, 11.63, 10.8]
+	budget: 100
+	service_rates_budget: 66
+
+Solver Factors:
+	crn_across_solns: True
+	sample_size: 10
+
+1 macroreplications were run.
+5 postreplications were run at each recommended solution.
+
+The initial solution is (8.85, 9.45, 8.85, 11.63, 10.8). Its estimated objective is 11.2014.
+The proxy optimal solution is (14.6559, 13.224, 19.6078, 13.4841, 19.1855). Its estimated objective is 4.186.
+1 postreplications were taken at x0 and x_star.
+
+Macroreplication Results:
+
+Macroreplication 1:
+	Budget: 0	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.3506
+	Budget: 20	Recommended Solution: (13.8629, 16.3666, 14.1347, 11.6067, 14.4925)	Estimated Objective: 5.1619
+	Budget: 50	Recommended Solution: (14.6559, 13.224, 19.6078, 13.4841, 19.1855)	Estimated Objective: 4.0268
+	Budget: 100	Recommended Solution: (14.6559, 13.224, 19.6078, 13.4841, 19.1855)	Estimated Objective: 4.0268
+	The time taken to complete this macroreplication was 26.28 s.
