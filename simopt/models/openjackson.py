@@ -595,7 +595,7 @@ class OpenJacksonMinQueue(Problem):
         x : vector of decision variables
         """
         if (self.model.factors["steady_state_initialization"]==True):
-            x = np.zeros(self.model.factors["number_queues"])
+            x = [0]*self.model.factors["number_queues"]
             lambdas = self.model.calc_lambdas()
             sum_alphas = sum(self.model.factors["arrival_alphas"])
             for i in range(self.model.factors["number_queues"]):

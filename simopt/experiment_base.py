@@ -983,9 +983,9 @@ def post_normalize(experiments, n_postreps_init_opt, crn_across_init_opt=True, p
             # Substitute estimates at x0 and x* (based on N postreplicates)
             # with new estimates (based on L postreplicates).
             for budget in range(len(experiment.all_intermediate_budgets[mrep])):
-                if experiment.all_recommended_xs[mrep][budget] == x0:
+                if (np.array(experiment.all_recommended_xs[mrep][budget])== np.array(x0)).all():
                     est_objectives.append(np.mean(x0_postreps))
-                elif experiment.all_recommended_xs[mrep][budget] == xstar:
+                elif (np.array(experiment.all_recommended_xs[mrep][budget]) == np.array(xstar)).all():
                     est_objectives.append(np.mean(xstar_postreps))
                 else:
                     est_objectives.append(experiment.all_est_objectives[mrep][budget])
@@ -1315,7 +1315,7 @@ def check_common_problem_and_reference(experiments):
             print("At least two experiments have different problem instances.")
         if experiment.x0 != ref_experiment.x0:
             print("At least two experiments have different starting solutions.")
-        if experiment.xstar != ref_experiment.xstar:
+        if (np.array(experiment.xstar) != np.array(ref_experiment.xstar)).all():
             print("At least two experiments have different optimal solutions.")
 
 
