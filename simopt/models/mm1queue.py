@@ -44,11 +44,12 @@ class MM1Queue(Model):
     --------
     base.Model
     """
-    def __init__(self, fixed_factors=None):
+    def __init__(self, fixed_factors=None, random=False):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "MM1"
         self.n_rngs = 2
+        self.n_random = 2 # lambda and people
         self.n_responses = 3
         self.specifications = {
             "lambda": {

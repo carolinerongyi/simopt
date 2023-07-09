@@ -12,6 +12,7 @@ from ..base import Model, Problem
 def erdos_renyi(rng, n, p, directed = True):
      
     graph = np.random.uniform(size =(n,n+1))    ###### Need to change to rng from list
+    
     graph = np.where(graph<p,1,0)
     # print(graph)
     if not directed:
@@ -172,29 +173,37 @@ class OpenJackson(Model):
         lambdas = self.calc_lambdas()
         return all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors['number_queues']))
     
-    def initialize_random(self, random_rng):
+    def attach_rng(self, random_rng):
+        def dirichlet(alpha, rng):
+            gamma_vars = [rng.gammavariate(a, 1) for a in alpha]
+            sum_gamma_vars = sum(gamma_vars)
+            dirichlet_vars = [x / sum_gamma_vars for x in gamma_vars]
+            return dirichlet_vars
+        
+        self.random_rng = random_rng
         random_num_queue = random_rng[0].randint(1, 15)
-        random_arrival = random_rng[1].uniform(1, 10, random_num_queue)
-        # for now, generate a random matrix with dirichlet distribution
-        random_matrix = erdos_renyi(random_rng[2], random_num_queue,random_arrival)
+        random_arrival = []
+        for i in range(random_num_queue):
+            random_arrival.append(random_rng[1].uniform(1, 10))
+        p = 0.8
+        random_matrix = erdos_renyi(random_rng[2], random_num_queue,p)
+        prob_matrix = np.zeros((random_num_queue, random_num_queue + 1))
         for i in range(random_num_queue):
             a = int(sum(random_matrix[i]))+1
-            probs = random_rng[2].dirichlet(np.ones(a),1)
+            probs = dirichlet(np.ones(a), rng = random_rng[2])
             r = 0
             for j in range(random_num_queue+1):
                 if random_matrix[i][j]==1 or j == random_num_queue:
-                    random_matrix[i][j] = probs[0][r]
-                r += 1
-                
-        random_routing_matrix = np.asarray(random_matrix)
+                    prob_matrix[i][j] = probs[r]
+                    r += 1
+        print(prob_matrix)
+        prob_matrix = np.asarray(prob_matrix)
+        prob_matrix = prob_matrix[:, :-1]
         self.factors["number_queues"] = random_num_queue
         self.factors["arrival_alphas"] = random_arrival
-        self.factors["routing_matrix"] = random_routing_matrix
+        self.factors["routing_matrix"] = prob_matrix
 
         return
-    
-    def attach_rng(self, random_rng):
-        self.random_rng = random_rng
 
 
     def replicate(self, rng_list):
@@ -226,6 +235,7 @@ class OpenJackson(Model):
         #calculate the steady state of the queues to check the simulation
         #calculate lambdas
         routing_matrix = np.asarray(self.factors["routing_matrix"])
+        print(routing_matrix)
         lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
         rho = lambdas/self.factors["service_mus"]
         #calculate expected value of queue length as rho/(1-rho)
