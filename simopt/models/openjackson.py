@@ -10,10 +10,14 @@ from ..base import Model, Problem
 
 # generates an erdos renyi graph where each subgraph has an exit 
 def erdos_renyi(rng, n, p, directed = True):
-     
-    graph = np.random.uniform(size =(n,n+1))    ###### Need to change to rng from list
-    
-    graph = np.where(graph<p,1,0)
+    graph = np.zeros((n,n+1)) 
+    for i in range(n):
+        for j in range(n+1):
+            prob = rng.uniform(0,1)
+            if prob < p:
+                graph[i][j] = 1
+    # graph = np.random.uniform(size =(n,n+1))    ###### Need to change to rng from list
+    # graph = np.where(graph<p,1,0)
     # print(graph)
     if not directed:
         graph = np.triu(graph)
@@ -175,6 +179,7 @@ class OpenJackson(Model):
         return all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors['number_queues']))
     
     def attach_rng(self, random_rng):
+        #returns a dirichlet distribution of same shape as alpha
         def dirichlet(alpha, rng):
             gamma_vars = [rng.gammavariate(a, 1) for a in alpha]
             sum_gamma_vars = sum(gamma_vars)

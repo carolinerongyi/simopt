@@ -41,12 +41,18 @@ class ChessMatchmaking(Model):
     --------
     base.Model
     """
-    def __init__(self, fixed_factors=None):
+    def __init__(self, fixed_factors=None, random = False):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "CHESS"
         self.n_rngs = 2
         self.n_responses = 2
+        
+        ## random instance
+        self.random = random
+        self.n_random = 3  # Number of rng used for the random instance
+        # random instance factors: number_queues, arrival_alphas, service_mus, routing_matrix
+
         self.specifications = {
             "elo_mean": {
                 "description": "mean of normal distribution for Elo rating",
