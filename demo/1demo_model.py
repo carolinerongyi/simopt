@@ -10,7 +10,8 @@ Instead of modifying the problem and model class, we modify the demo_model and d
 
 import sys
 import os.path as o
-sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+# sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
 sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
 
 import numpy as np
@@ -24,8 +25,10 @@ from mrg32k3a.mrg32k3a import MRG32k3a
 # from simopt.models.covid import COVID_vac    #combined case
 
 # from simopt.models.ccbaby1 import BabyCC
-from simopt.models.openjackson import OpenJacksonMinQueue
-from simopt.models.openjackson import OpenJackson
+# from simopt.models.openjackson import OpenJacksonMinQueue
+# from simopt.models.openjackson import OpenJackson
+from simopt.models.chessmm import ChessMatchmaking
+from simopt.models.chessmm import ChessAvgDifference
 
 x = (10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 100)
 
@@ -35,7 +38,7 @@ x = (10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 100)
 fixed_factors = {}
 
 # mymodel = SAN(fixed_factors = fixed_factors, random=True)
-mymodel = OpenJackson(fixed_factors = fixed_factors, random=True)
+mymodel = ChessMatchmaking(fixed_factors = fixed_factors, random=True)
 # from models.<filename> import <model_class_name>
 # Replace <filename> with name of .py file containing model class.
 # Replace <model_class_name> with name of model class.

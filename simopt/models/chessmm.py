@@ -50,8 +50,8 @@ class ChessMatchmaking(Model):
         
         ## random instance
         self.random = random
-        self.n_random = 3  # Number of rng used for the random instance
-        # random instance factors: number_queues, arrival_alphas, service_mus, routing_matrix
+        self.n_random = 2   # Number of rng used for the random instance
+        # random instance factors: num_players, allowable_diff
 
         self.specifications = {
             "elo_mean": {
@@ -105,9 +105,11 @@ class ChessMatchmaking(Model):
     def check_allowable_diff(self):
         return self.factors["allowable_diff"] > 0
     
-    def attach_rngs(self, random_rng):
-        
-        return super().attach_rngs(random_rng)
+    def attach_rng(self, random_rng):
+        num_player_lst = [50,100,500,1000,5000,10000]
+        self.factors["num_players"] = num_player_lst[int(np.floor(random_rng[0].uniform(0,6)))]
+        self.factors["allowable_diff"] = random_rng[1].randint(50,500)
+        return 
 
     def replicate(self, rng_list):
         """
@@ -240,7 +242,7 @@ class ChessAvgDifference(Problem):
     --------
     base.Problem
     """
-    def __init__(self, name="CHESS-1", fixed_factors=None, model_fixed_factors=None):
+    def __init__(self, name="CHESS-1", fixed_factors=None, model_fixed_factors=None, random = False, random_rng = None):
         if fixed_factors is None:
             fixed_factors = {}
         if model_fixed_factors is None:
@@ -260,6 +262,8 @@ class ChessAvgDifference(Problem):
         self.model_default_factors = {}
         self.model_decision_factors = {"allowable_diff"}
         self.factors = fixed_factors
+        self.random = random #random
+        self.n_rngs = 1  # Number of rngs used for the random instance
         self.specifications = {
             "initial_solution": {
                 "description": "initial solution",
@@ -285,6 +289,12 @@ class ChessAvgDifference(Problem):
         super().__init__(fixed_factors, model_fixed_factors)
         # Instantiate model with fixed factors and over-riden defaults.
         self.model = ChessMatchmaking(self.model_fixed_factors)
+        if random and random_rng:
+            self.model.attach_rng(random_rng)
+
+    def attach_rngs(self, random_rng):
+        self.random_rng = random_rng
+        return random_rng
 
     def check_upper_time(self):
         return self.factors["upper_time"] > 0
