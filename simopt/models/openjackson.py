@@ -80,7 +80,7 @@ class OpenJackson(Model):
         self.name = "OPENJACKSON"
         self.n_responses = 2
         self.random = random
-        self.n_random = 3  # Number of rng used for the random instance
+        self.n_random = 2  # Number of rng used for the random instance
         # random instance factors: number_queues, arrival_alphas, service_mus, routing_matrix
 
         self.factors = fixed_factors
@@ -98,7 +98,7 @@ class OpenJackson(Model):
             "service_mus": {
                 "description": "The mu values for the exponential service times ",
                 "datatype": list,
-                "default": [8.85,9.45,8.85,11.63,10.8]
+                "default": [20,20,20,20,20]
             },
             "routing_matrix": {
                 "description": "The routing matrix that describes the probabilities of moving to the next queue after leaving the current one",
@@ -147,7 +147,8 @@ class OpenJackson(Model):
     def check_arrival_alphas(self):
         return all(x >= 0 for x in self.factors["arrival_alphas"])
     def check_service_mus(self):
-        return all(x >= 0 for x in self.factors["service_mus"])
+        lambdas = self.calc_lambdas()
+        return all(x >= 0 for x in self.factors["service_mus"]) and all(self.factors['service_mus'][i] > lambdas[i] for i in range(self.factors["number_queues"]))
     def check_routing_matrix(self):
         transition_sums = list(map(sum, self.factors["routing_matrix"]))
         if all([len(row) == len(self.factors["routing_matrix"]) for row in self.factors["routing_matrix"]]) & \
@@ -181,27 +182,39 @@ class OpenJackson(Model):
             return dirichlet_vars
         
         self.random_rng = random_rng
-        random_num_queue = random_rng[0].randint(1, 15)
-        random_arrival = []
-        for i in range(random_num_queue):
-            random_arrival.append(random_rng[1].uniform(1, 10))
-        p = 0.8
-        random_matrix = erdos_renyi(random_rng[2], random_num_queue,p)
+        random_num_queue = self.factors['number_queues']
+        p = 0.5
+        random_matrix = erdos_renyi(random_rng[1], random_num_queue,p)
         prob_matrix = np.zeros((random_num_queue, random_num_queue + 1))
         for i in range(random_num_queue):
             a = int(sum(random_matrix[i]))+1
-            probs = dirichlet(np.ones(a), rng = random_rng[2])
+            probs = dirichlet(np.ones(a), rng = random_rng[1])
             r = 0
             for j in range(random_num_queue+1):
                 if random_matrix[i][j]==1 or j == random_num_queue:
                     prob_matrix[i][j] = probs[r]
                     r += 1
-        print(prob_matrix)
         prob_matrix = np.asarray(prob_matrix)
         prob_matrix = prob_matrix[:, :-1]
-        self.factors["number_queues"] = random_num_queue
+
+        # calculate the upper bound for arrival alphas
+        upper_bound = (np.identity(self.factors['number_queues']) - prob_matrix.T) @ self.factors["service_mus"]
+        for i in range(random_num_queue):
+            while (upper_bound[i] <= 0):
+                for j in range(random_num_queue):
+                    if prob_matrix[j][i] - 0.1 > 0:
+                        prob_matrix[j][i] -= 0.1
+                upper_bound = (np.identity(self.factors['number_queues']) - prob_matrix.T) @ self.factors["service_mus"]
+
+        random_arrival = []
+        for i in range(random_num_queue):
+            random_arrival.append(random_rng[0].uniform(0, upper_bound[i]))
         self.factors["arrival_alphas"] = random_arrival
-        self.factors["routing_matrix"] = prob_matrix
+        self.factors['routing_matrix'] = prob_matrix
+        print(prob_matrix)
+        print(upper_bound)
+        print(random_arrival)
+            
 
         return
 
@@ -235,7 +248,6 @@ class OpenJackson(Model):
         #calculate the steady state of the queues to check the simulation
         #calculate lambdas
         routing_matrix = np.asarray(self.factors["routing_matrix"])
-        print(routing_matrix)
         lambdas = np.linalg.inv(np.identity(self.factors['number_queues']) - routing_matrix.T) @ self.factors["arrival_alphas"]
         rho = lambdas/self.factors["service_mus"]
         #calculate expected value of queue length as rho/(1-rho)

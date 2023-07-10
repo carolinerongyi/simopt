@@ -98,6 +98,11 @@ class MM1Queue(Model):
         # demo for condition that queue must be stable
         # return self.factors["mu"] > self.factors["lambda"]
         return True
+    
+    def attach_rngs(self, random_rng):
+        self.random_rng = random_rng
+        self.factors['lambda'] = random_rng[0].uniform(0.1, 3)
+        self.factors['people'] = random_rng[1].randint(1, 100)
 
     def replicate(self, rng_list):
         """
@@ -260,7 +265,7 @@ class MM1MinMeanSojournTime(Problem):
     --------
     base.Problem
     """
-    def __init__(self, name="MM1-1", fixed_factors=None, model_fixed_factors=None):
+    def __init__(self, name="MM1-1", fixed_factors=None, model_fixed_factors=None, random = False, random_rng = None):
         if fixed_factors is None:
             fixed_factors = {}
         if model_fixed_factors is None:
@@ -307,6 +312,13 @@ class MM1MinMeanSojournTime(Problem):
         super().__init__(fixed_factors, model_fixed_factors)
         # Instantiate model with fixed factors and overwritten defaults.
         self.model = MM1Queue(self.model_fixed_factors)
+        if random and random_rng:
+            self.model.attach_rng(random_rng)
+    
+    def attach_rngs(self, random_rng):
+        self.random_rng = random_rng
+        self.model.attach_rng(random_rng)
+        return random_rng
 
     def vector_to_factor_dict(self, vector):
         """
