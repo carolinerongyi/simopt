@@ -102,7 +102,7 @@ class OpenJackson(Model):
             "service_mus": {
                 "description": "The mu values for the exponential service times ",
                 "datatype": list,
-                "default": [20,20,20,20,20]
+                "default": [10,10,10,10,10]
             },
             "routing_matrix": {
                 "description": "The routing matrix that describes the probabilities of moving to the next queue after leaving the current one",
@@ -116,7 +116,7 @@ class OpenJackson(Model):
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": int,
-                "default": 500
+                "default": 5000
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
@@ -216,9 +216,6 @@ class OpenJackson(Model):
             random_arrival.append(random_rng[0].uniform(0, upper_bound[i]))
         self.factors["arrival_alphas"] = random_arrival
         self.factors['routing_matrix'] = prob_matrix
-        print(prob_matrix)
-        print(upper_bound)
-        print(random_arrival)
             
 
         return
@@ -477,7 +474,7 @@ class OpenJacksonMinQueue(Problem):
             "service_rates_budget" :{
                 "description": "budget for total service rates sum",
                 "datatype": int,
-                "default": 66 # ask later: access model factors when setting default values for budget
+                "default": 100 # ask later: access model factors when setting default values for budget
             }
         }
         self.check_factor_list = {
@@ -503,7 +500,13 @@ class OpenJacksonMinQueue(Problem):
     def attach_rngs(self, random_rng):
         self.random_rng = random_rng
         self.model.attach_rng(random_rng)
-        return random_rng
+        lambdas = self.model.calc_lambdas()
+        random_service_rates_budget = []
+        for i in range(self.model.factors["number_queues"]):
+            random_service_rates_budget.append(random_rng[0].uniform(lambdas[i], 5*lambdas[i]))
+
+        self.factors["service_rates_budget"] = random_service_rates_budget
+        return
     
     def check_service_rates_budget(self):
         routing_matrix = np.asarray(self.model.factors["routing_matrix"])
