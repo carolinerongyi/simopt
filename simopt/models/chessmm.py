@@ -104,6 +104,10 @@ class ChessMatchmaking(Model):
 
     def check_allowable_diff(self):
         return self.factors["allowable_diff"] > 0
+    
+    def attach_rngs(self, random_rng):
+        
+        return super().attach_rngs(random_rng)
 
     def replicate(self, rng_list):
         """
