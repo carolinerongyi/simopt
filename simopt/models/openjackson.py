@@ -116,7 +116,7 @@ class OpenJackson(Model):
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": int,
-                "default": 5000
+                "default": 500
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
@@ -189,11 +189,11 @@ class OpenJackson(Model):
         self.random_rng = random_rng
         random_num_queue = self.factors['number_queues']
         p = 0.5
-        random_matrix = erdos_renyi(random_rng[1], random_num_queue,p)
+        random_matrix = erdos_renyi(random_rng[0], random_num_queue,p)
         prob_matrix = np.zeros((random_num_queue, random_num_queue + 1))
         for i in range(random_num_queue):
             a = int(sum(random_matrix[i]))+1
-            probs = dirichlet(np.ones(a), rng = random_rng[1])
+            probs = dirichlet(np.ones(a), rng = random_rng[0])
             r = 0
             for j in range(random_num_queue+1):
                 if random_matrix[i][j]==1 or j == random_num_queue:
@@ -201,21 +201,21 @@ class OpenJackson(Model):
                     r += 1
         prob_matrix = np.asarray(prob_matrix)
         prob_matrix = prob_matrix[:, :-1]
-
-        # calculate the upper bound for arrival alphas
-        upper_bound = (np.identity(self.factors['number_queues']) - prob_matrix.T) @ self.factors["service_mus"]
-        for i in range(random_num_queue):
-            while (upper_bound[i] <= 0):
-                for j in range(random_num_queue):
-                    if prob_matrix[j][i] - 0.1 > 0:
-                        prob_matrix[j][i] -= 0.1
-                upper_bound = (np.identity(self.factors['number_queues']) - prob_matrix.T) @ self.factors["service_mus"]
-
         random_arrival = []
         for i in range(random_num_queue):
-            random_arrival.append(random_rng[0].uniform(0, upper_bound[i]))
+            random_arrival.append(random_rng[1].uniform(0, 1))
+
+        # calculate the upper bound for arrival alphas
+        # upper_bound = (np.identity(self.factors['number_queues']) - prob_matrix.T) @ self.factors["service_mus"]
+        # for i in range(random_num_queue):
+        #     while (upper_bound[i] <= 0):
+        #         for j in range(random_num_queue):
+        #             if prob_matrix[j,i] - 0.1 > 0:
+        #                 prob_matrix[j,i] -= 0.1
+        #         upper_bound = (np.identity(self.factors['number_queues']) - prob_matrix.T) @ self.factors["service_mus"]
+
         self.factors["arrival_alphas"] = random_arrival
-        self.factors['routing_matrix'] = prob_matrix
+        self.factors['routing_matrix'] = prob_matrix.tolist()
             
 
         return
@@ -457,14 +457,14 @@ class OpenJacksonMinQueue(Problem):
         self.model_decision_factors = {"service_mus"}
         self.factors = fixed_factors
         self.random = random
-        self.n_rngs = 0
+        self.n_rngs = 1
         
 
         self.specifications = {
             "initial_solution": {
                 "description": "initial solution",
                 "datatype": tuple,
-                "default": [8.85,9.45,8.85,11.63,10.8]
+                "default": [10,10,10,10,10]
             },
             "budget": {
                 "description": "max # of replications for a solver to take",
@@ -499,7 +499,6 @@ class OpenJacksonMinQueue(Problem):
 
     def attach_rngs(self, random_rng):
         self.random_rng = random_rng
-        self.model.attach_rng(random_rng)
         lambdas = self.model.calc_lambdas()
         random_service_rates_budget = []
         for i in range(self.model.factors["number_queues"]):

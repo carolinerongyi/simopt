@@ -4,16 +4,16 @@ Solver: RNDSRCH
 
 Model Factors:
 	number_queues: 5
-	arrival_alphas: [2, 3, 2, 4, 3]
-	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.2, 0.1, 0, 0.1, 0.2], [0.1, 0.1, 0.1, 0, 0.2], [0.1, 0.1, 0.1, 0.1, 0.2]]
+	arrival_alphas: [1.098584675282808, 2.8355793258014192, 0.23145257822087512, 2.3301476960775105, 7.150391391611843]
+	routing_matrix: [[0.0, 0.0, 0.0, 0.0, 0.0], [0.29483461151602497, 0.0, 0.0, 0.3431571145064691, 0.0], [0.009839952816749846, 0.0, 0.3976868638196669, 0.03827323437532837, 0.0], [0.0, 0.2984569275883937, 0.11555415577551466, 0.29134938438575303, 0.0], [0.5709007114184274, 0.025046637030447183, 0.0, 0.0, 0.16048296872118878]]
 	t_end: 500
 	warm_up: 200
 	steady_state_initialization: True
 
 Problem Factors:
-	initial_solution: [8.85, 9.45, 8.85, 11.63, 10.8]
+	initial_solution: [10, 10, 10, 10, 10]
 	budget: 100
-	service_rates_budget: 66
+	service_rates_budget: [17.763450810717767, 8.543940715192914, 7.13811080719608, 24.365928218076103, 8.968863233466282]
 
 Solver Factors:
 	crn_across_solns: True
@@ -22,15 +22,15 @@ Solver Factors:
 1 macroreplications were run.
 5 postreplications were run at each recommended solution.
 
-The initial solution is (8.85, 9.45, 8.85, 11.63, 10.8). Its estimated objective is 11.2014.
-The proxy optimal solution is (14.6559, 13.224, 19.6078, 13.4841, 19.1855). Its estimated objective is 4.186.
+The initial solution is (10, 10, 10, 10, 10). Its estimated objective is 9.6266.
+The proxy optimal solution is (15.9078, 11.4818, 14.7993, 11.25, 20.2278). Its estimated objective is 3.5847.
 1 postreplications were taken at x0 and x_star.
 
 Macroreplication Results:
 
 Macroreplication 1:
-	Budget: 0	Recommended Solution: (8.85, 9.45, 8.85, 11.63, 10.8)	Estimated Objective: 10.3506
-	Budget: 20	Recommended Solution: (13.8629, 16.3666, 14.1347, 11.6067, 14.4925)	Estimated Objective: 5.1619
-	Budget: 50	Recommended Solution: (14.6559, 13.224, 19.6078, 13.4841, 19.1855)	Estimated Objective: 4.0268
-	Budget: 100	Recommended Solution: (14.6559, 13.224, 19.6078, 13.4841, 19.1855)	Estimated Objective: 4.0268
-	The time taken to complete this macroreplication was 26.28 s.
+	Budget: 0	Recommended Solution: (10, 10, 10, 10, 10)	Estimated Objective: 12.159
+	Budget: 20	Recommended Solution: (15.1348, 14.545, 9.4646, 9.4199, 15.6534)	Estimated Objective: 4.4905
+	Budget: 50	Recommended Solution: (15.9078, 11.4818, 14.7993, 11.25, 20.2278)	Estimated Objective: 3.522
+	Budget: 100	Recommended Solution: (15.9078, 11.4818, 14.7993, 11.25, 20.2278)	Estimated Objective: 3.522
+	The time taken to complete this macroreplication was 39.65 s.
