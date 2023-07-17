@@ -55,7 +55,6 @@ from simopt.base import Solution
 from simopt.models.openjackson import OpenJacksonMinQueue
 from simopt.models.openjackson import OpenJackson
 
-
 def rebase(random_rng, n):
     new_rngs = []
     for rng in random_rng:
