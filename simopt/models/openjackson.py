@@ -508,6 +508,11 @@ class OpenJacksonMinQueue(Problem):
         if random and random_rng:
             self.model.attach_rng(random_rng)
 
+        lambdas = self.model.calc_lambdas()
+        r = self.factors["service_rates_budget"]/sum(lambdas)
+        self.factors['initial_solution'] = tuple([r*lambda_i for lambda_i in lambdas])
+        
+
     def attach_rngs(self, random_rng):
         self.random_rng = random_rng
         lambdas = self.model.calc_lambdas()
@@ -517,6 +522,10 @@ class OpenJacksonMinQueue(Problem):
         scale = self.factors["gamma_scale"]
         gamma = random_rng[0].gammavariate(mean/scale, scale)
         self.factors["service_rates_budget"] = sum(lambdas) + gamma
+
+        lambdas = self.model.calc_lambdas()
+        r = self.factors["service_rates_budget"]/sum(lambdas)
+        self.factors['initial_solution'] = tuple([r*lambda_i for lambda_i in lambdas])
         
         return
     
