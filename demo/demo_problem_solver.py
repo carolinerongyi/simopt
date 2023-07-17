@@ -29,7 +29,7 @@ from simopt.experiment_base import ProblemSolver, read_experiment_results, post_
 
 # Example with random search solver on continuous newsvendor problem.
 # -----------------------------------------------
-solver_name = "PGD"  # Random search solver
+solver_name = "BOOM-PGD"  # Random search solver
 problem_name = "OPENJACKSON-1"  # Continuous newsvendor problem
 # -----------------------------------------------
 
@@ -43,7 +43,7 @@ print(f"Results will be stored as {file_name_path}.")
 myexperiment = ProblemSolver(solver_name, problem_name)
 
 # Run a fixed number of macroreplications of the solver on the problem.
-myexperiment.run(n_macroreps=20)
+myexperiment.run(n_macroreps=5)
 
 # If the solver runs have already been performed, uncomment the
 # following pair of lines (and uncommmen the myexperiment.run(...)

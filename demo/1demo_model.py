@@ -25,10 +25,10 @@ from mrg32k3a.mrg32k3a import MRG32k3a
 # from simopt.models.covid import COVID_vac    #combined case
 
 # from simopt.models.ccbaby1 import BabyCC
-# from simopt.models.openjackson import OpenJacksonMinQueue
-# from simopt.models.openjackson import OpenJackson
-from simopt.models.chessmm import ChessMatchmaking
-from simopt.models.chessmm import ChessAvgDifference
+from simopt.models.openjackson import OpenJacksonMinQueue
+from simopt.models.openjackson import OpenJackson
+# from simopt.models.chessmm import ChessMatchmaking
+# from simopt.models.chessmm import ChessAvgDifference
 
 x = (10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 100)
 
