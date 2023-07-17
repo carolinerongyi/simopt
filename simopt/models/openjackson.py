@@ -475,7 +475,18 @@ class OpenJacksonMinQueue(Problem):
                 "description": "budget for total service rates sum",
                 "datatype": int,
                 "default": 100 # ask later: access model factors when setting default values for budget
+            },
+            "gamma_mean":{
+                "description": "scale of the mean of gamma distribution when generating service rates upper bound",
+                "datatype": float,
+                "default": 0.5
+            },
+            "gamma_scale":{
+                "description": "shape of gamma distribution when generating service rates upper bound",
+                "datatype": tuple,
+                "default": 5
             }
+
         }
         self.check_factor_list = {
             "initial_solution": self.check_initial_solution,
@@ -500,11 +511,13 @@ class OpenJacksonMinQueue(Problem):
     def attach_rngs(self, random_rng):
         self.random_rng = random_rng
         lambdas = self.model.calc_lambdas()
-        random_service_rates_budget = []
-        for i in range(self.model.factors["number_queues"]):
-            random_service_rates_budget.append(random_rng[0].uniform(lambdas[i], 5*lambdas[i]))
 
-        self.factors["service_rates_budget"] = random_service_rates_budget
+        # generate service rates upper bound as the sum of lambdas plus a gamma random variable with parameter as an input
+        mean = self.factors["gamma_mean"] * sum(lambdas)
+        scale = self.factors["gamma_scale"]
+        gamma = random_rng[0].gammavariate(mean/scale, scale)
+        self.factors["service_rates_budget"] = sum(lambdas) + gamma
+        
         return
     
     def check_service_rates_budget(self):
