@@ -127,6 +127,16 @@ class OpenJackson(Model):
                 "description": "Whether the model will be initialized with steady state values",
                 "datatype": bool,
                 "default": True
+            },
+            "density_p":{
+                "description": "The probability of an edge existing in the graph in the random instance",
+                "datatype": float,
+                "default": 0.5
+            },
+            "random_arrival_parameter":{
+                "description": "The parameter for the random arrival rate exponential distribution when creating a random instance",
+                "datatype": float,
+                "default": 1
             }
             
             
@@ -138,7 +148,9 @@ class OpenJackson(Model):
             "service_mus": self.check_service_mus,
             "t_end": self.check_t_end,
             "warm_up": self.check_warm_up,
-            "steady_state_initialization": self.check_steady_state_initialization
+            "steady_state_initialization": self.check_steady_state_initialization,
+            "density_p": self.check_density_p,
+            "random_arrival_parameter": self.check_random_arrival_parameter
         }
         # Set factors of the simulation model.
         super().__init__(fixed_factors)
@@ -167,6 +179,10 @@ class OpenJackson(Model):
         return self.factors["warm_up"] >= 0
     def check_steady_state_initialization(self):
         return isinstance(self.factors["steady_state_initialization"], bool)
+    def check_density_p(self):
+        return 0 <= self.factors["density_p"] <= 1
+    def check_random_arrival_parameter(self):
+        return self.factors["random_arrival_parameter"] >= 0
 
     # function that calulates the lambdas
     def calc_lambdas(self):
@@ -188,7 +204,7 @@ class OpenJackson(Model):
         
         self.random_rng = random_rng
         random_num_queue = self.factors['number_queues']
-        p = 0.5
+        p = self.factors['density_p']
         random_matrix = erdos_renyi(random_rng[0], random_num_queue,p)
         prob_matrix = np.zeros((random_num_queue, random_num_queue + 1))
         for i in range(random_num_queue):
@@ -203,7 +219,7 @@ class OpenJackson(Model):
         prob_matrix = prob_matrix[:, :-1]
         random_arrival = []
         for i in range(random_num_queue):
-            random_arrival.append(random_rng[1].uniform(0, 1))
+            random_arrival.append(random_rng[1].expovariate(self.factors['random_arrival_parameter']))
 
         # calculate the upper bound for arrival alphas
         # upper_bound = (np.identity(self.factors['number_queues']) - prob_matrix.T) @ self.factors["service_mus"]
@@ -464,17 +480,17 @@ class OpenJacksonMinQueue(Problem):
             "initial_solution": {
                 "description": "initial solution",
                 "datatype": tuple,
-                "default": [10,10,10,10,10]
+                "default": [12,12,12,12,12]
             },
             "budget": {
                 "description": "max # of replications for a solver to take",
                 "datatype": int,
-                "default": 100
+                "default": 30
             },
             "service_rates_budget" :{
                 "description": "budget for total service rates sum",
                 "datatype": int,
-                "default": 100 # ask later: access model factors when setting default values for budget
+                "default": 150 # ask later: access model factors when setting default values for budget
             },
             "gamma_mean":{
                 "description": "scale of the mean of gamma distribution when generating service rates upper bound",
@@ -492,6 +508,333 @@ class OpenJacksonMinQueue(Problem):
             "initial_solution": self.check_initial_solution,
             "budget": self.check_budget,
             "service_rates_budget": self.check_service_rates_budget
+        }
+        super().__init__(fixed_factors, model_fixed_factors)
+        self.model = OpenJackson(self.model_fixed_factors, random)
+        self.Ci = np.array([1 for _ in range(self.model.factors["number_queues"])])
+        self.di = np.array([self.factors['service_rates_budget']])
+        self.Ce = None
+        self.de = None
+        self.dim = self.model.factors["number_queues"]
+        self.lower_bounds = tuple(0 for _ in range(self.model.factors["number_queues"]))
+        self.upper_bounds = tuple(self.factors['service_rates_budget'] for _ in range(self.model.factors["number_queues"]))
+        # Instantiate model with fixed factors and overwritten defaults.
+        self.optimal_value = None  # Change if f is changed.
+        self.optimal_solution = None  # Change if f is changed.
+        if random and random_rng:
+            self.model.attach_rng(random_rng)
+
+        lambdas = self.model.calc_lambdas()
+        r = self.factors["service_rates_budget"]/sum(lambdas)
+        self.factors['initial_solution'] = tuple([r*lambda_i for lambda_i in lambdas])
+        
+
+    def attach_rngs(self, random_rng):
+        self.random_rng = random_rng
+        lambdas = self.model.calc_lambdas()
+
+        # generate service rates upper bound as the sum of lambdas plus a gamma random variable with parameter as an input
+        mean = self.factors["gamma_mean"] * sum(lambdas)
+        scale = self.factors["gamma_scale"]
+        gamma = random_rng[0].gammavariate(mean/scale, scale)
+        self.factors["service_rates_budget"] = sum(lambdas) + gamma
+
+        lambdas = self.model.calc_lambdas()
+        r = self.factors["service_rates_budget"]/sum(lambdas)
+        self.factors['initial_solution'] = tuple([r*lambda_i for lambda_i in lambdas])
+        
+        return
+    
+    def check_service_rates_budget(self):
+        routing_matrix = np.asarray(self.model.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
+        if sum(self.factors["service_rates_budget"]) < sum(lambdas) :
+            return False
+        return True
+            
+
+    def vector_to_factor_dict(self, vector):
+        """
+        Convert a vector of variables to a dictionary with factor keys
+
+        Arguments
+        ---------
+        vector : tuple
+            vector of values associated with decision variables
+
+        Returns
+        -------
+        factor_dict : dictionary
+            dictionary with factor keys and associated values
+        """
+        factor_dict = {
+            "service_mus": vector[:]
+        }
+        return factor_dict
+
+    def factor_dict_to_vector(self, factor_dict):
+        """
+        Convert a dictionary with factor keys to a vector
+        of variables.
+
+        Arguments
+        ---------
+        factor_dict : dictionary
+            dictionary with factor keys and associated values
+
+        Returns
+        -------
+        vector : tuple
+            vector of values associated with decision variables
+        """
+        vector = (factor_dict["service_mus"],)
+        return vector
+
+    def response_dict_to_objectives(self, response_dict):
+        """
+        Convert a dictionary with response keys to a vector
+        of objectives.
+
+        Arguments
+        ---------
+        response_dict : dictionary
+            dictionary with response keys and associated values
+
+        Returns
+        -------
+        objectives : tuple
+            vector of objectives
+        """
+        if type(response_dict['total_jobs']) == tuple:
+            objectives = (response_dict['total_jobs'][0],)
+        else:
+            objectives = (response_dict['total_jobs'],)
+        return objectives
+
+    def response_dict_to_stoch_constraints(self, response_dict):
+        """
+        Convert a dictionary with response keys to a vector
+        of left-hand sides of stochastic constraints: E[Y] <= 0
+
+        Arguments
+        ---------
+        response_dict : dictionary
+            dictionary with response keys and associated values
+
+        Returns
+        -------
+        stoch_constraints : tuple
+            vector of LHSs of stochastic constraint
+        """
+        stoch_constraints = None
+        return stoch_constraints
+
+    def deterministic_objectives_and_gradients(self, x):
+        """
+        Compute deterministic components of objectives for a solution `x`.
+
+        Arguments
+        ---------
+        x : tuple
+            vector of decision variables
+
+        Returns
+        -------
+        det_objectives : tuple
+            vector of deterministic components of objectives
+        det_objectives_gradients : tuple
+            vector of gradients of deterministic components of objectives
+        """
+        det_objectives = (0,)
+        det_objectives_gradients = ((0,) * self.dim,)
+        return det_objectives, det_objectives_gradients
+
+    def deterministic_stochastic_constraints_and_gradients(self, x):
+        """
+        Compute deterministic components of stochastic constraints
+        for a solution `x`.
+
+        Arguments
+        ---------
+        x : tuple
+            vector of decision variables
+
+        Returns
+        -------
+        det_stoch_constraints : tuple
+            vector of deterministic components of stochastic constraints
+        det_stoch_constraints_gradients : tuple
+            vector of gradients of deterministic components of
+            stochastic constraints
+        """
+        det_stoch_constraints = None
+        det_stoch_constraints_gradients = None
+        return det_stoch_constraints, det_stoch_constraints_gradients
+
+    def check_deterministic_constraints(self, x):
+        """
+        Check if a solution `x` satisfies the problem's deterministic
+        constraints.
+
+        Arguments
+        ---------
+        x : tuple
+            vector of decision variables
+
+        Returns
+        -------
+        satisfies : bool
+            indicates if solution `x` satisfies the deterministic constraints.
+        """
+        # Superclass method will check box constraints.
+        # Can add other constraints here.
+        routing_matrix = np.asarray(self.model.factors["routing_matrix"])
+        lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
+        box_feasible = all(x[i] > lambdas[i] for i in range(self.model.factors['number_queues']))
+        upper_feasible = (sum(x) <= self.factors['service_rates_budget'])
+        return super().check_deterministic_constraints(x) * box_feasible * upper_feasible
+
+    def get_random_solution(self, rand_sol_rng):
+        """
+        Generate a random solution for starting or restarting solvers.
+
+        Arguments
+        ---------
+        rand_sol_rng : mrg32k3a.mrg32k3a.MRG32k3a object
+            random-number generator used to sample a new random solution
+
+        Returns
+        -------
+        x : vector of decision variables
+        """
+        if (self.model.factors["steady_state_initialization"]==True):
+            x = [0]*self.model.factors["number_queues"]
+            lambdas = self.model.calc_lambdas()
+            sum_alphas = sum(self.model.factors["arrival_alphas"])
+            for i in range(self.model.factors["number_queues"]):
+                x[i] = lambdas[i] + rand_sol_rng.uniform(0,1) * sum_alphas
+        else:
+            x = rand_sol_rng.continuous_random_vector_from_simplex(n_elements=self.model.factors["number_queues"],
+                                                               summation=self.factors["service_rates_budget"],
+                                                               exact_sum=False
+                                                               )
+        return x
+
+"""
+Summary(.)
+-------
+Minimize the expected total number of jobs in the system at a time
+"""
+
+class OpenJacksonMinQueue2(Problem):
+    """
+    Class to Open Jackson simulation-optimization problems.
+
+    Attributes
+    ----------
+    name : string
+        name of problem
+    dim : int
+        number of decision variables
+    n_objectives : int
+        number of objectives
+    n_stochastic_constraints : int
+        number of stochastic constraints
+    service_rates_budget: int
+        budget for total service rates sum
+    minmax : tuple of int (+/- 1)
+        indicator of maximization (+1) or minimization (-1) for each objective
+    constraint_type : string
+        description of constraints types:
+            "unconstrained", "box", "deterministic", "stochastic"
+    variable_type : string
+        description of variable types:
+            "discrete", "continuous", "mixed"
+    lower_bounds : tuple
+        lower bound for each decision variable
+    upper_bounds : tuple
+        upper bound for each decision variable
+    gradient_available : bool
+        indicates if gradient of objective function is available
+    optimal_value : tuple
+        optimal objective function value
+    optimal_solution : tuple
+        optimal solution
+    model : Model object
+        associated simulation model that generates replications
+    model_default_factors : dict
+        default values for overriding model-level default factors
+    model_fixed_factors : dict
+        combination of overriden model-level factors and defaults
+    model_decision_factors : set of str
+        set of keys for factors that are decision variables
+    rng_list : list of mrg32k3a.mrg32k3a.MRG32k3a objects
+        list of RNGs used to generate a random initial solution
+        or a random problem instance
+    factors : dict
+        changeable factors of the problem
+            initial_solution : tuple
+                default initial solution from which solvers start
+            budget : int > 0
+                max number of replications (fn evals) for a solver to take
+    specifications : dict
+        details of each factor (for GUI, data validation, and defaults)
+
+    Arguments
+    ---------
+    name : str
+        user-specified name for problem
+    fixed_factors : dict
+        dictionary of user-specified problem factors
+    model_fixed factors : dict
+        subset of user-specified non-decision factors to pass through to the model
+
+    See also
+    --------
+    base.Problem
+    """
+    def __init__(self, name="OPENJACKSON-2", fixed_factors=None, model_fixed_factors=None, random = False, random_rng = None):
+        if fixed_factors is None:
+            fixed_factors = {}
+        if model_fixed_factors is None:
+            model_fixed_factors = {}
+        self.name = name
+        self.n_objectives = 1
+        self.n_stochastic_constraints = 0
+        self.minmax = (-1,)
+        self.constraint_type = "deterministic"
+        self.variable_type = "continuous"
+        self.gradient_available = True
+        self.model_default_factors = {}
+        self.model_decision_factors = {"service_mus"}
+        self.factors = fixed_factors
+        self.random = random
+        self.n_rngs = 1
+        
+
+        self.specifications = {
+            "initial_solution": {
+                "description": "initial solution",
+                "datatype": tuple,
+                "default": [12,12,12,12,12]
+            },
+            "budget": {
+                "description": "max # of replications for a solver to take",
+                "datatype": int,
+                "default": 30
+            },
+            "service_rates_factor" :{
+                "description": "weight of the service rates in the objective function",
+                "datatype": int,
+                "default": 1
+            }
+
+
+        }
+        self.check_factor_list = {
+            "initial_solution": self.check_initial_solution,
+            "budget": self.check_budget,
+            "service_rates_factor": self.check_service_rates_budget
         }
         super().__init__(fixed_factors, model_fixed_factors)
         self.model = OpenJackson(self.model_fixed_factors, random)

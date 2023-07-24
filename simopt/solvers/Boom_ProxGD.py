@@ -68,7 +68,7 @@ class BoomProxGD(Solver):
             "backtrack":{
                 "description": "an indicator whether we do the backtrack",
                 "datatype": bool,
-                "default": 0
+                "default": 1
             },
             "proj_thres":{
                 "description": "proportion of the max iters to stop if have too many projections",

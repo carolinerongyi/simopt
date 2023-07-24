@@ -1,0 +1,62 @@
+./experiments/outputs/Boom-PGD_on_OPENJACKSON-1.pickle
+Problem: OPENJACKSON-1
+Solver: Boom-PGD
+
+Model Factors:
+	number_queues: 5
+	arrival_alphas: [2, 3, 2, 4, 3]
+	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.2, 0.1, 0, 0.1, 0.2], [0.1, 0.1, 0.1, 0, 0.2], [0.1, 0.1, 0.1, 0.1, 0.2]]
+	t_end: 500
+	warm_up: 200
+	steady_state_initialization: True
+	density_p: 0.5
+	random_arrival_parameter: 1
+
+Problem Factors:
+	initial_solution: (26.765788989136436, 28.610753084146562, 26.919535997053945, 35.16847726017307, 32.535444669489955)
+	budget: 30
+	service_rates_budget: 150
+	gamma_mean: 0.5
+	gamma_scale: 5
+
+Solver Factors:
+	crn_across_solns: True
+	r: 30
+	h: 0.1
+	step_f: <bound method BoomProxGD.default_step_f of <simopt.solvers.Boom_ProxGD.BoomProxGD object at 0x7ff5e80faee0>>
+	max_iters: 300
+	theta: 0.2
+	line_search_max_iters: 20
+	ratio: 0.8
+	max_gamma: 1
+	backtrack: 1
+	proj_thres: 0.1
+
+5 macroreplications were run.
+100 postreplications were run at each recommended solution.
+
+The initial solution is (26.7658, 28.6108, 26.9195, 35.1685, 32.5354). Its estimated objective is 1.4154.
+The proxy optimal solution is (26.7658, 28.6108, 26.9195, 35.1685, 32.5354). Its estimated objective is 1.4154.
+100 postreplications were taken at x0 and x_star.
+
+Macroreplication Results:
+
+Macroreplication 1:
+	Budget: 30	Recommended Solution: (26.7658, 28.6108, 26.9195, 35.1685, 32.5354)	Estimated Objective: 1.4132
+	The time taken to complete this macroreplication was 7.88 s.
+
+Macroreplication 2:
+	Budget: 30	Recommended Solution: (26.7658, 28.6108, 26.9195, 35.1685, 32.5354)	Estimated Objective: 1.4163
+	The time taken to complete this macroreplication was 7.85 s.
+
+Macroreplication 3:
+	Budget: 30	Recommended Solution: (26.7658, 28.6108, 26.9195, 35.1685, 32.5354)	Estimated Objective: 1.4124
+	The time taken to complete this macroreplication was 7.86 s.
+
+Macroreplication 4:
+	Budget: 30	Recommended Solution: (26.7658, 28.6108, 26.9195, 35.1685, 32.5354)	Estimated Objective: 1.4099
+	The time taken to complete this macroreplication was 7.81 s.
+
+Macroreplication 5:
+	Budget: 30	Recommended Solution: (26.7658, 28.6108, 26.9195, 35.1685, 32.5354)	Estimated Objective: 1.4179
+	The time taken to complete this macroreplication was 7.84 s.

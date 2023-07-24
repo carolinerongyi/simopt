@@ -5,8 +5,8 @@ macroreplications of the solver on the problem.
 """
 
 import sys
-sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
-# sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+# sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
+sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
 
 import os.path as o
 import os
@@ -29,8 +29,8 @@ from simopt.experiment_base import ProblemSolver, read_experiment_results, post_
 
 # Example with random search solver on continuous newsvendor problem.
 # -----------------------------------------------
-solver_name = "PGD"  # Random search solver
-problem_name = "OPENJACKSON-1"  # Continuous newsvendor problem
+solver_name = "BOOM-PGD"  # Random search solver
+problem_name = "MM1-1"  # Continuous newsvendor problem
 # -----------------------------------------------
 
 print(f"Testing solver {solver_name} on problem {problem_name}.")
@@ -43,7 +43,7 @@ print(f"Results will be stored as {file_name_path}.")
 myexperiment = ProblemSolver(solver_name, problem_name)
 
 # Run a fixed number of macroreplications of the solver on the problem.
-myexperiment.run(n_macroreps=20)
+myexperiment.run(n_macroreps=5)
 
 # If the solver runs have already been performed, uncomment the
 # following pair of lines (and uncommmen the myexperiment.run(...)
@@ -52,9 +52,9 @@ myexperiment.run(n_macroreps=20)
 
 print("Post-processing results.")
 # Run a fixed number of postreplications at all recommended solutions.
-myexperiment.post_replicate(n_postreps=200)
+myexperiment.post_replicate(n_postreps=100)
 # Find an optimal solution x* for normalization.
-post_normalize([myexperiment], n_postreps_init_opt=200)
+post_normalize([myexperiment], n_postreps_init_opt=100)
 
 # Log results.
 myexperiment.log_experiment_results()
