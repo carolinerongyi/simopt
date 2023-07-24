@@ -16,9 +16,6 @@ def erdos_renyi(rng, n, p, directed = True):
             prob = rng.uniform(0,1)
             if prob < p:
                 graph[i][j] = 1
-    # graph = np.random.uniform(size =(n,n+1))    ###### Need to change to rng from list
-    # graph = np.where(graph<p,1,0)
-    # print(graph)
     if not directed:
         graph = np.triu(graph)
 
@@ -116,7 +113,7 @@ class OpenJackson(Model):
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": int,
-                "default": 500
+                "default": 200
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",

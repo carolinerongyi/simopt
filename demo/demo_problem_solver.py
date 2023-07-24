@@ -30,7 +30,7 @@ from simopt.experiment_base import ProblemSolver, read_experiment_results, post_
 # Example with random search solver on continuous newsvendor problem.
 # -----------------------------------------------
 solver_name = "BOOM-PGD"  # Random search solver
-problem_name = "MM1-1"  # Continuous newsvendor problem
+problem_name = "OPENJACKSON-1"  # Continuous newsvendor problem
 # -----------------------------------------------
 
 print(f"Testing solver {solver_name} on problem {problem_name}.")
