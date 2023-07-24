@@ -813,7 +813,7 @@ class OpenJacksonMinQueue2(Problem):
             "initial_solution": {
                 "description": "initial solution",
                 "datatype": tuple,
-                "default": [12,12,12,12,12]
+                "default": [15,15,15,15,15]
             },
             "budget": {
                 "description": "max # of replications for a solver to take",
@@ -831,17 +831,13 @@ class OpenJacksonMinQueue2(Problem):
         self.check_factor_list = {
             "initial_solution": self.check_initial_solution,
             "budget": self.check_budget,
-            "service_rates_factor": self.check_service_rates_budget
+            "service_rates_factor": self.check_service_rates_factor
         }
         super().__init__(fixed_factors, model_fixed_factors)
         self.model = OpenJackson(self.model_fixed_factors, random)
-        self.Ci = np.array([1 for _ in range(self.model.factors["number_queues"])])
-        self.di = np.array([self.factors['service_rates_budget']])
-        self.Ce = None
-        self.de = None
         self.dim = self.model.factors["number_queues"]
         self.lower_bounds = tuple(0 for _ in range(self.model.factors["number_queues"]))
-        self.upper_bounds = tuple(self.factors['service_rates_budget'] for _ in range(self.model.factors["number_queues"]))
+        self.upper_bounds = (np.inf,) * self.dim
         # Instantiate model with fixed factors and overwritten defaults.
         self.optimal_value = None  # Change if f is changed.
         self.optimal_solution = None  # Change if f is changed.
@@ -849,32 +845,18 @@ class OpenJacksonMinQueue2(Problem):
             self.model.attach_rng(random_rng)
 
         lambdas = self.model.calc_lambdas()
-        r = self.factors["service_rates_budget"]/sum(lambdas)
-        self.factors['initial_solution'] = tuple([r*lambda_i for lambda_i in lambdas])
+        self.factors['initial_solution'] = tuple([1.1*lambda_i for lambda_i in lambdas])
         
 
     def attach_rngs(self, random_rng):
         self.random_rng = random_rng
-        lambdas = self.model.calc_lambdas()
-
-        # generate service rates upper bound as the sum of lambdas plus a gamma random variable with parameter as an input
-        mean = self.factors["gamma_mean"] * sum(lambdas)
-        scale = self.factors["gamma_scale"]
-        gamma = random_rng[0].gammavariate(mean/scale, scale)
-        self.factors["service_rates_budget"] = sum(lambdas) + gamma
-
-        lambdas = self.model.calc_lambdas()
-        r = self.factors["service_rates_budget"]/sum(lambdas)
-        self.factors['initial_solution'] = tuple([r*lambda_i for lambda_i in lambdas])
+        self.factors["service_rates_factor"] = random_rng[0].uniform(0,5)
         
         return
     
-    def check_service_rates_budget(self):
-        routing_matrix = np.asarray(self.model.factors["routing_matrix"])
-        lambdas = np.linalg.inv(np.identity(self.model.factors['number_queues']) - routing_matrix.T) @ self.model.factors["arrival_alphas"]
-        if sum(self.factors["service_rates_budget"]) < sum(lambdas) :
-            return False
-        return True
+    def check_service_rates_factor(self):
+       
+        return self.factors['service_rates_factor'] >= 0
             
 
     def vector_to_factor_dict(self, vector):
