@@ -7,8 +7,8 @@ at a given solution.
 
 import sys
 import os.path as o
-# sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
-sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
+sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+# sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
 sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
 
 # Import random number generator.
@@ -44,10 +44,10 @@ from simopt.base import Solution
 
 # Working example for CntNVMaxProfit problem.
 # -----------------------------------------------
-from simopt.models.openjackson import OpenJacksonMinQueue
+from simopt.models.openjackson import OpenJacksonMinQueueLagrange
 # fixed_factors = {"initial_solution": (2,), "budget": 500}
-myproblem = OpenJacksonMinQueue()
-x = [8.85,9.45,8.85,11.63,10.8]
+myproblem = OpenJacksonMinQueueLagrange()
+x = [15,15,15,15,15]
 mysolution = Solution(x, myproblem)
 # -----------------------------------------------
 

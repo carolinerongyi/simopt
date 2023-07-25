@@ -35,7 +35,7 @@ from .models.paramesti import ParameterEstimation, ParamEstiMaxLogLik
 from .models.fixedsan import FixedSAN, FixedSANLongestPath
 from .models.network import Network, NetworkMinTotalCost
 from .models.amusementpark import AmusementPark, AmusementParkMinDepart
-from .models.openjackson import OpenJackson, OpenJacksonMinQueue
+from .models.openjackson import OpenJackson, OpenJacksonMinQueue, OpenJacksonMinQueueLagrange
 
 # directory dictionaries
 solver_directory = {
@@ -88,7 +88,8 @@ problem_directory = {
     "FIXEDSAN-1": FixedSANLongestPath,
     "NETWORK-1": NetworkMinTotalCost,
     "AMUSEMENTPARK-1": AmusementParkMinDepart,
-    "OPENJACKSON-1": OpenJacksonMinQueue
+    "OPENJACKSON-1": OpenJacksonMinQueue,
+    "OPENJACKSON-2": OpenJacksonMinQueueLagrange
 }
 
 problem_unabbreviated_directory = {
@@ -113,7 +114,8 @@ problem_unabbreviated_directory = {
     "Min Mean Longest Path for Fixed Stochastic Activity Network (SBCG)": FixedSANLongestPath,
     "Min Total Cost for Communication Networks System (SDCN)": NetworkMinTotalCost,
     "Min Total Departed Visitors for Amusement Park (SDDN)": AmusementParkMinDepart,
-    "Min Queue Length for Open Jackson Network ()": OpenJacksonMinQueue
+    "Min Queue Length for Open Jackson Network ()": OpenJacksonMinQueue,
+    "Min Queue Length for Open Jackson Network Using Lagrange()": OpenJacksonMinQueueLagrange
 }
 model_directory = {
     "EXAMPLE": ExampleModel,
