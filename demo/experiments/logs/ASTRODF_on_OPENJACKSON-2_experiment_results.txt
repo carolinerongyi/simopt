@@ -46,4 +46,4 @@ Macroreplication 1:
 	Budget: 292	Recommended Solution: (8.007, 8.6634, 8.1735, 10.0302, 9.4288)	Estimated Objective: 59.0049
 	Budget: 376	Recommended Solution: (8.3158, 8.8151, 8.3665, 10.4404, 9.7799)	Estimated Objective: 58.7435
 	Budget: 500	Recommended Solution: (8.3158, 8.8151, 8.3665, 10.4404, 9.7799)	Estimated Objective: 58.7435
-	The time taken to complete this macroreplication was 177.56 s.
+	The time taken to complete this macroreplication was 60.63 s.

@@ -119,7 +119,7 @@ class OpenJackson(Model):
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
                 "datatype": int,
-                "default": 200
+                "default": 50
             },
             "steady_state_initialization":{
                 "description": "Whether the model will be initialized with steady state values",
@@ -261,6 +261,15 @@ class OpenJackson(Model):
         #calculate expected value of queue length as rho/(1-rho)
         expected_queue_length = (rho)/(1-rho)
 
+        # keep track of waiting time for all customers
+        waiting_times = [[] for _ in range(self.factors["number_queues"])]
+        
+        # keep track of service times for all customers
+        service_times = [[] for _ in range(self.factors["number_queues"])]
+
+        # keep track of time entered for all customers in queue
+        time_entered = [deque() for _ in range(self.factors["number_queues"])]
+
         if self.factors["steady_state_initialization"]:
         # sample initialized queue lengths
             
@@ -272,6 +281,11 @@ class OpenJackson(Model):
                 if queues[i] > 0:
                     completion_times[i] = time_rng[i].expovariate(self.factors["service_mus"][i])
             time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
+
+            # initialize time_entered in steady state
+            for i in range(len(queues)):
+                for j in range(queues[i]):
+                    time_entered[i].append(0)
         else:
             queues = [0 for _ in range(self.factors["number_queues"])]
             # Generate all interarrival, network routes, and service times before the simulation run.
@@ -284,14 +298,6 @@ class OpenJackson(Model):
             # initialize list of each station's average queue length
             time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
 
-        # keep track of waiting time for all customers
-        waiting_times = [[] for _ in range(self.factors["number_queues"])]
-        
-        # keep track of service times for all customers
-        service_times = [[] for _ in range(self.factors["number_queues"])]
-
-        # keep track of time entered for all customers in queue
-        time_entered = [[] for _ in range(self.factors["number_queues"])]
 
         # Initiate clock variables for statistics tracking and event handling.
         clock = 0
@@ -307,13 +313,24 @@ class OpenJackson(Model):
                 if next_arrival < next_completion: # next event is an arrival
                     station = next_arrivals.index(next_arrival)
                     queues[station] += 1
+                    # record time entered
+                    time_entered[station].append(clock)
+
                     next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
                     if queues[station] == 1:
+
+                        # remove element from time_entered
+                        time_entered[station].popleft()
+
                         completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                 else: # next event is a departure
                     station = completion_times.index(next_completion)
                     queues[station] -= 1
                     if queues[station] > 0:
+
+                        # remove element from time_entered
+                        time_entered[station].popleft()
+
                         completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                     else:
                         completion_times[station] = math.inf
@@ -324,10 +341,18 @@ class OpenJackson(Model):
                     if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
                         next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
                         queues[next_station] += 1
+                        # record time entered
+                        time_entered[next_station].append(clock)
                         if queues[next_station] == 1:
+                            # remove element from time_entered
+                            time_entered[next_station].popleft()
+
                             completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
             next_arrivals = [next_arrivals[i] - clock for i in range(self.factors["number_queues"])]
             completion_times = [completion_times[i] - clock for i in range(self.factors["number_queues"])]
+            for i in range(self.factors['number_queues']):
+                for j in range(len(time_entered[i])):
+                    time_entered[i][j] -= clock
             clock = 0
             previous_clock = 0
 
@@ -341,22 +366,31 @@ class OpenJackson(Model):
             clock = min(next_arrival, next_completion)
             for i in range(self.factors['number_queues']):
                 time_sum_queue_length[i] += queues[i] * (clock - previous_clock)
-                variance[i].append(queues[i])
-            
 
             previous_clock = clock
 
             if next_arrival < next_completion: # next event is an arrival
                 station = next_arrivals.index(next_arrival)
                 queues[station] += 1
+                # record time entered
+                time_entered[station].append(clock)
+
                 next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
                 if queues[station] == 1:
+                    # record waiting time and remove element from time entered
+                    waiting_times[station].append(clock - time_entered[station].popleft())
                     completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
+                    # record service time
+                    service_times[station].append(completion_times[station] - clock)
             else: # next event is a departure
                 station = completion_times.index(next_completion)
                 queues[station] -= 1
                 if queues[station] > 0:
+                    # record waiting time and remove element from time entered
+                    waiting_times[station].append(clock - time_entered[station].popleft())
                     completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
+                    # record service time
+                    service_times[station].append(completion_times[station] - clock)
                 else:
                     completion_times[station] = math.inf
                 
@@ -366,22 +400,35 @@ class OpenJackson(Model):
                 if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
                     next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
                     queues[next_station] += 1
+                    # record time entered
+                    time_entered[next_station].append(clock)
                     if queues[next_station] == 1:
+                        # record waiting time and remove element from time_entered
+                        waiting_times[next_station].append(clock - time_entered[next_station].popleft())
                         completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
+                        # record service time
+                        service_times[next_station].append(completion_times[next_station] - clock)
 
                 
         # end of simulation
+
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
-        gradient = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(-2) for i in range(self.factors['number_queues'])]
+        gradient = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(2) for i in range(self.factors['number_queues'])]
         lagrange_obj = sum(lambdas[i]/(self.factors["service_mus"][i] - lambdas[i]) for i in range(self.factors['number_queues'])) + sum(self.factors['service_mus'])
+        lagrange_grad = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(2) + 1 for i in range(self.factors['number_queues'])]
 
-        responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length, "total_jobs": sum(average_queue_length)}
+        responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
+                      "total_jobs": sum(average_queue_length), 'waiting_times': waiting_times, 'service_times': service_times}
+        # responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
+        #               "total_jobs": sum(average_queue_length)}
         gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in responses}
         
         gradients['average_queue_length']['service_mus'] = tuple(gradient)
         gradients['total_jobs']['service_mus'] = tuple(gradient)
-        gradients['lagrange_obj']['service_mus'] = tuple(gradient)
+        gradients['lagrange_obj']['service_mus'] = tuple(lagrange_grad)
+
+
         
         return responses, gradients
 
