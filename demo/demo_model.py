@@ -63,16 +63,16 @@ print(f"Is the specified model simulatable? {bool(mymodel.check_simulatable_fact
 rng_list = [MRG32k3a(s_ss_sss_index=[0, ss, 0]) for ss in range(mymodel.n_rngs)]
 
 
-def IPA_MM1(W, X, mu):
-    IPA = [0 for i in range(len(X))]
-    for i in range(1, len(X)):
-        # IPA[i] = max(W[i], 0) * (IPA[i-1] - X[i-1]/mu**2)
-        if W[i] <= 0:
-            IPA[i] = 0
-        else:
-            IPA[i] = IPA[i-1] - X[i-1]/mu
+# def IPA_MM1(W, X, mu):
+#     IPA = [0 for i in range(len(X))]
+#     for i in range(1, len(X)):
+#         # IPA[i] = max(W[i], 0) * (IPA[i-1] - X[i-1]/mu**2)
+#         if W[i] <= 0:
+#             IPA[i] = 0
+#         else:
+#             IPA[i] = IPA[i-1] - X[i-1]/mu
     
-    return IPA
+#     return IPA
 
 
 # IPA = [[] for _ in range(mymodel.factors['number_queues'])]
@@ -101,7 +101,9 @@ def IPA_MM1(W, X, mu):
 
 
 # Run a single replication of the model.
-# responses, gradients = mymodel.replicate(rng_list)
+responses, gradients = mymodel.replicate(rng_list)
+print(responses['arrival_record'][0][:5])
+print(responses['transfer_record'][0][:5])
 # print("\nFor a single replication:")
 # print("\nResponses:")
 # for key, value in responses.items():
