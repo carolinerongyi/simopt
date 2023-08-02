@@ -3,9 +3,10 @@ Summary
 -------
 Simulate an open jackson network 
 """
-import numpy as np
+import autograd.numpy as np
 import math as math
 from collections import deque
+# from auto_diff_util import bi_dict, replicate_wrapper, factor_dict, resp_dict_to_array
 
 from ..base import Model, Problem
 
@@ -119,7 +120,7 @@ class OpenJackson(Model):
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
                 "datatype": int,
-                "default": 50
+                "default": 100
             },
             "steady_state_initialization":{
                 "description": "Whether the model will be initialized with steady state values",
@@ -284,7 +285,7 @@ class OpenJackson(Model):
 
             # initialize time_entered in steady state
             for i in range(len(queues)):
-                for j in range(queues[i]):
+                for j in range(max(queues[i]-1,0)):
                     time_entered[i].append(0)
         else:
             queues = [0 for _ in range(self.factors["number_queues"])]
@@ -356,6 +357,9 @@ class OpenJackson(Model):
             clock = 0
             previous_clock = 0
 
+        num_customers = [0 for _ in range(self.factors["number_queues"])] # keep track of how many customers have finished service
+        customer_record = [deque() for i in range(self.factors['number_queues'])]
+        transfer_record = [[] for i in range(self.factors['number_queues'])]
         # Run simulation over time horizon.
         while clock < self.factors["t_end"]:
 
@@ -415,7 +419,8 @@ class OpenJackson(Model):
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
         gradient = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(2) for i in range(self.factors['number_queues'])]
-        lagrange_obj = sum(lambdas[i]/(self.factors["service_mus"][i] - lambdas[i]) for i in range(self.factors['number_queues'])) + sum(self.factors['service_mus'])
+        # lagrange_obj = sum(lambdas[i]/(self.factors["service_mus"][i] - lambdas[i]) for i in range(self.factors['number_queues'])) + 0.5*sum(self.factors['service_mus'])
+        lagrange_obj = sum(average_queue_length) + 0.5*sum(self.factors['service_mus'])
         lagrange_grad = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(2) + 1 for i in range(self.factors['number_queues'])]
 
         responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
@@ -534,7 +539,7 @@ class OpenJacksonMinQueue(Problem):
             "budget": {
                 "description": "max # of replications for a solver to take",
                 "datatype": int,
-                "default": 100
+                "default": 1000
             },
             "service_rates_budget" :{
                 "description": "budget for total service rates sum",
@@ -875,7 +880,7 @@ class OpenJacksonMinQueueLagrange(Problem):
             "service_rates_factor" :{
                 "description": "weight of the service rates in the objective function",
                 "datatype": int,
-                "default": 0.001
+                "default": 0.5
             }
 
 
@@ -969,6 +974,13 @@ class OpenJacksonMinQueueLagrange(Problem):
             objectives = (response_dict['lagrange_obj'],)
         return objectives
     
+        # if type(response_dict['total_jobs']) == tuple:
+        #     objectives = (response_dict['total_jobs'][0],)
+        # else:
+        #     objectives = (response_dict['total_jobs'],)
+        # return objectives
+    
+    
     def response_dict_to_stoch_constraints(self, response_dict):
         """
         Convert a dictionary with response keys to a vector
@@ -1003,7 +1015,7 @@ class OpenJacksonMinQueueLagrange(Problem):
         det_objectives_gradients : tuple
             vector of gradients of deterministic components of objectives
         """
-        # det_objectives = (0,)
+        # det_objectives = (self.factors['service_rates_factor']*sum(x),)
         # lambdas = self.model.calc_lambdas()
         # det_objectives_gradients = []
         # for i in range(self.dim):

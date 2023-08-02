@@ -7,6 +7,12 @@ Provide base classes for solvers, problems, and models.
 
 import numpy as np
 from copy import deepcopy
+import sys
+import os.path as o
+sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
+sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+
+from auto_diff_util import bi_dict, replicate_wrapper
 # from mrg32k3a.mrg32k3a import MRG32k3a
 from mrg32k3a.mrg32k3a import MRG32k3a #when do the multinomial, change to the local
 
@@ -809,7 +815,26 @@ class Model(object):
             Gradient estimate for each response.
         """
         raise NotImplementedError
+    
+# class Auto_Model(Model):
+#     """
+#     Subclass of Model. 
+#     """
+#     def __init__(self, fixed_factors):
+#         # set factors of the simulation model
+#         # fill in missing factors with default values
+#         super(Auto_Model, self).__init__(fixed_factors)
+#         self.differentiable_factor_names = []
+#         for key in self.specifications:
+#             if self.specifications[key]["datatype"] == float:
+#                 self.differentiable_factor_names.append(key)
+#         self.bi_dict = bi_dict(self.response_names)
+                
+#     def innner_replicate(self, rng_list):
+#         raise NotImplementedError
 
+#     def replicate(self, rng_list, **kwargs):
+#         return replicate_wrapper(self, rng_list, **kwargs)
 
 class Solution(object):
     """Base class for solutions represented as vectors of decision variables
@@ -964,3 +989,4 @@ class Solution(object):
             # self.stoch_constraints_gradients_var = np.var(self.stoch_constraints_gradients[:self.n_reps], axis=0, ddof=1)
             # self.stoch_constraints_gradients_stderr = np.std(self.stoch_constraints_gradients[:self.n_reps], axis=0, ddof=1) / np.sqrt(self.n_reps)
             # self.stoch_constraints_gradients_cov = np.array([np.cov(self.stoch_constraints_gradients[:self.n_reps, stcon], rowvar=False, ddof=1) for stcon in range(len(self.det_stoch_constraints))])
+

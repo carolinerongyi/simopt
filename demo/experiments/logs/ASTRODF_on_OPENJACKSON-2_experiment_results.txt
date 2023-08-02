@@ -7,7 +7,7 @@ Model Factors:
 	arrival_alphas: (2, 3, 2, 4, 3)
 	routing_matrix: [[0.1, 0.1, 0.2, 0.2, 0], [0.1, 0.1, 0.2, 0.2, 0], [0.2, 0.1, 0, 0.1, 0.2], [0.1, 0.1, 0.1, 0, 0.2], [0.1, 0.1, 0.1, 0.1, 0.2]]
 	t_end: 200
-	warm_up: 200
+	warm_up: 100
 	steady_state_initialization: True
 	density_p: 0.5
 	random_arrival_parameter: 1
@@ -15,7 +15,7 @@ Model Factors:
 Problem Factors:
 	initial_solution: (6.4895089285714285, 6.936830357142858, 6.526785714285714, 8.526785714285714, 7.888392857142857)
 	budget: 500
-	service_rates_factor: 0.001
+	service_rates_factor: 0.5
 
 Solver Factors:
 	crn_across_solns: True
@@ -31,19 +31,13 @@ Solver Factors:
 1 macroreplications were run.
 50 postreplications were run at each recommended solution.
 
-The initial solution is (6.4895, 6.9368, 6.5268, 8.5268, 7.8884). Its estimated objective is 86.3683.
-The proxy optimal solution is (8.3158, 8.8151, 8.3665, 10.4404, 9.7799). Its estimated objective is 58.7435.
+The initial solution is (6.4895, 6.9368, 6.5268, 8.5268, 7.8884). Its estimated objective is 65.0283.
+The proxy optimal solution is (6.4895, 6.9368, 6.5268, 8.5268, 7.8884). Its estimated objective is 65.0283.
 50 postreplications were taken at x0 and x_star.
 
 Macroreplication Results:
 
 Macroreplication 1:
-	Budget: 4	Recommended Solution: (6.4895, 6.9368, 6.5268, 8.5268, 7.8884)	Estimated Objective: 86.3683
-	Budget: 132	Recommended Solution: (6.7047, 7.1183, 6.7386, 8.6453, 8.0257)	Estimated Objective: 76.7615
-	Budget: 172	Recommended Solution: (6.872, 7.2837, 6.9095, 8.8332, 8.2183)	Estimated Objective: 70.7293
-	Budget: 212	Recommended Solution: (7.1173, 7.5519, 7.135, 9.1279, 8.5074)	Estimated Objective: 65.2847
-	Budget: 252	Recommended Solution: (7.5089, 7.8558, 7.7063, 9.4687, 8.8336)	Estimated Objective: 61.2839
-	Budget: 292	Recommended Solution: (8.007, 8.6634, 8.1735, 10.0302, 9.4288)	Estimated Objective: 59.0049
-	Budget: 376	Recommended Solution: (8.3158, 8.8151, 8.3665, 10.4404, 9.7799)	Estimated Objective: 58.7435
-	Budget: 500	Recommended Solution: (8.3158, 8.8151, 8.3665, 10.4404, 9.7799)	Estimated Objective: 58.7435
-	The time taken to complete this macroreplication was 60.63 s.
+	Budget: 4	Recommended Solution: (6.4895, 6.9368, 6.5268, 8.5268, 7.8884)	Estimated Objective: 64.6952
+	Budget: 500	Recommended Solution: (6.4895, 6.9368, 6.5268, 8.5268, 7.8884)	Estimated Objective: 64.6952
+	The time taken to complete this macroreplication was 61.52 s.

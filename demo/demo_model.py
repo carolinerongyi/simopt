@@ -87,7 +87,7 @@ orig_grad = gradients['total_jobs']['service_mus']
 for j in range(mymodel.factors['number_queues']):
     mu_IPA.append(lambdas[j]*np.mean(IPA[j]))
     var_IPA = (lambdas[j]**2) * np.var(IPA[j])
-    IPA_CI.append([mu_IPA[j] - 1.96 * np.sqrt(var_IPA/len(IPA[j])), mu_IPA[j] + 1.96 * np.sqrt(var_IPA/len(IPA[j]))])
+    IPA_CI.append([mu_IPA[j] - 2.576 * np.sqrt(var_IPA/len(IPA[j])), mu_IPA[j] + 2.576 * np.sqrt(var_IPA/len(IPA[j]))])
 
 print(IPA_CI)
 print(orig_grad)

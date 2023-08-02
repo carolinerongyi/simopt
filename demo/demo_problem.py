@@ -47,7 +47,7 @@ from simopt.base import Solution
 from simopt.models.openjackson import OpenJacksonMinQueueLagrange
 # fixed_factors = {"initial_solution": (2,), "budget": 500}
 myproblem = OpenJacksonMinQueueLagrange()
-x = [15,15,15,15,15]
+x = [11,11,11,11,11]
 mysolution = Solution(x, myproblem)
 # -----------------------------------------------
 
