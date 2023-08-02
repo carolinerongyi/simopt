@@ -51,6 +51,15 @@ x = [11,11,11,11,11]
 mysolution = Solution(x, myproblem)
 # -----------------------------------------------
 
+# Working example for CntNVMaxProfit problem.
+# -----------------------------------------------
+from simopt.models.fickleserver2 import FickleServerMinServiceRate2
+# fixed_factors = {"initial_solution": (2,), "budget": 500}
+myproblem = FickleServerMinServiceRate2()
+x = [10,10,20,20,30,30]
+mysolution = Solution(x, myproblem)
+# -----------------------------------------------
+
 # Another working example for FacilitySizingTotalCost problem. (Commented out)
 # This example has stochastic constraints.
 # -----------------------------------------------

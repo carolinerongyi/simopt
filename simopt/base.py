@@ -820,25 +820,25 @@ class Model(object):
         """
         raise NotImplementedError
     
-# class Auto_Model(Model):
-#     """
-#     Subclass of Model. 
-#     """
-#     def __init__(self, fixed_factors):
-#         # set factors of the simulation model
-#         # fill in missing factors with default values
-#         super(Auto_Model, self).__init__(fixed_factors)
-#         self.differentiable_factor_names = []
-#         for key in self.specifications:
-#             if self.specifications[key]["datatype"] == float:
-#                 self.differentiable_factor_names.append(key)
-#         self.bi_dict = bi_dict(self.response_names)
+class Auto_Model(Model):
+    """
+    Subclass of Model. 
+    """
+    def __init__(self, fixed_factors):
+        # set factors of the simulation model
+        # fill in missing factors with default values
+        super(Auto_Model, self).__init__(fixed_factors)
+        self.differentiable_factor_names = []
+        for key in self.specifications:
+            if self.specifications[key]["datatype"] == float:
+                self.differentiable_factor_names.append(key)
+        self.bi_dict = bi_dict(self.response_names)
                 
-#     def innner_replicate(self, rng_list):
-#         raise NotImplementedError
+    def innner_replicate(self, rng_list):
+        raise NotImplementedError
 
-#     def replicate(self, rng_list, **kwargs):
-#         return replicate_wrapper(self, rng_list, **kwargs)
+    def replicate(self, rng_list, **kwargs):
+        return replicate_wrapper(self, rng_list, **kwargs)
 
 class Solution(object):
     """Base class for solutions represented as vectors of decision variables

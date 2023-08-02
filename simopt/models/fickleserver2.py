@@ -12,7 +12,7 @@ TODO.
 
 import autograd.numpy as np
 from ..base import Auto_Model, Problem
-from auto_diff_util import factor_dict, resp_dict_to_array, replicate_wrapper# WHERE
+from ..auto_diff_util import factor_dict, resp_dict_to_array, replicate_wrapper# WHERE
 
 
 class FickleServer2(Auto_Model):
@@ -49,13 +49,16 @@ class FickleServer2(Auto_Model):
     --------
     base.Model
     """
-    def __init__(self, fixed_factors=None):
+    def __init__(self, fixed_factors=None,random =False):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "MM1"
         self.n_rngs = 3
+        self.random = random
+        self.n_random = 2  # Number of rng used for the random instance -- todo?
+        # random instance factors: number_queues, arrival_alphas, service_mus, routing_matrix
         self.n_responses = 2
-        self.response_names = ['EL1', 'EL2', 'EL3', 'EL4', 'EL5', 'EL6']
+        self.response_names = ['EL1', 'EL2', 'EL3', 'EL4', 'EL5', 'EL6','arrival_counts', "late_calls"]
         self.specifications = {
             "T": {
                 "description": "simulation length",
@@ -112,7 +115,13 @@ class FickleServer2(Auto_Model):
             "T": self.check_T,
             "N": self.check_N,
             "lambdas": self.check_lambdas,
-            "mus": self.check_mus,
+            # "mus": self.check_mus,
+            "mu1" : self.check_mu1,
+            "mu2" : self.check_mu2,
+            "mu3" : self.check_mu3,
+            "mu4" : self.check_mu4,
+            "mu5" : self.check_mu5,
+            "mu6" : self.check_mu6,
             "late_threshold": self.check_late_threshold
         }
         # Set factors of the simulation model.
@@ -127,8 +136,26 @@ class FickleServer2(Auto_Model):
     def check_lambdas(self):
         return all(lambd > 0 for lambd in self.factors["lambdas"])
 
-    def check_mus(self):
-        return all(mu > 0 for mu in self.factors["mus"])
+    # def check_mus(self):
+    #     return all(mu > 0 for mu in self.factors["mus"])
+
+    def check_mu1(self):
+        return self.factors["mu1"] > 0
+    
+    def check_mu2(self):
+        return self.factors["mu2"] > 0
+    
+    def check_mu3(self):
+        return self.factors["mu3"] > 0
+    
+    def check_mu4(self):
+        return self.factors["mu4"] > 0
+    
+    def check_mu5(self):
+        return self.factors["mu5"] > 0
+    
+    def check_mu6(self):
+        return self.factors["mu6"] > 0
 
     def check_late_threshold(self):
         return self.factors["late_threshold"] >= 0
@@ -227,7 +254,8 @@ class FickleServer2(Auto_Model):
         responses = {}
         for i in range(N):
             responses['EL' + str(i+1)] = EL[i]
-     
+        responses['arrival_counts'] = arr_count
+        responses['late_calls'] = late_calls
         # return responses, gradient
         return resp_dict_to_array(self, responses, response_names)
 
@@ -302,15 +330,21 @@ class FickleServerMinServiceRate2(Problem):
     --------
     base.Problem
     """
-    def __init__(self, name="MM1-1", fixed_factors=None, model_fixed_factors=None):
+    def __init__(self, name="MM1-1", fixed_factors=None, model_fixed_factors=None, random = False):
         if fixed_factors is None:
             fixed_factors = {}
         if model_fixed_factors is None:
             model_fixed_factors = {}
         self.name = name
-        self.dim = 18 # For now, we will only consider 6 periods
+
+        self.random = random
+        self.n_random = 2  # Number of rng used for the random instance -- todo? --hagen
+        # random instance factors: number_queues, arrival_alphas, service_mus, routing_matrix
+
+        self.dim = 6 # For now, we will only consider 6 periods ---- hagen changed
+        # self.dim = 18 # For now, we will only consider 6 periods
         self.n_objectives = 1
-        self.n_stochastic_constraints = 18 # 1 for each period
+        self.n_stochastic_constraints = 6 # 1 for each period  ##Hagen changedproblem dim to 6
         self.minmax = (-1,)
         self.constraint_type = "stochastic"
         self.variable_type = "continuous"
@@ -326,7 +360,8 @@ class FickleServerMinServiceRate2(Problem):
             "initial_solution": {
                 "description": "initial solution from which solvers start",
                 "datatype": tuple,
-                "default": tuple([10,10,20,20,30,30,60,60,80,80,60,60,30,30,20,20,10,10])
+                "default": tuple([10,10,20,20,30,30])
+                # "default": tuple([10,10,20,20,30,30,60,60,80,80,60,60,30,30,20,20,10,10])
             },
             "budget": {
                 "description": "max # of replications for a solver to take",
@@ -336,7 +371,8 @@ class FickleServerMinServiceRate2(Problem):
             "upper_thres": {
                 "description": "upper limit of amount of contamination",
                 "datatype": list,
-                "default": tuple([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+                # "default": tuple([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+                "default": tuple([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
             }
         }
         self.check_factor_list = {
@@ -399,7 +435,13 @@ class FickleServerMinServiceRate2(Problem):
         objectives : tuple
             vector of objectives
         """
-        objectives = (np.sum(response_dict["late_calls"]) / np.sum(response_dict["arrival_counts"]), )
+        sum = 0
+        for i in range(self.model.factors["N"]):
+            sum = sum + response_dict['EL' + str(i+1)]
+
+        print(response_dict.keys())
+        objectives = (sum / np.sum(response_dict["arrival_counts"]), )
+        # objectives = (np.sum(response_dict["late_calls"]) / np.sum(response_dict["arrival_counts"]), )
         return objectives
 
     def response_dict_to_stoch_constraints(self, response_dict):
@@ -422,7 +464,7 @@ class FickleServerMinServiceRate2(Problem):
         for i in range(len(response_dict["late_calls"])):
             lhs.append(response_dict["late_calls"][i] - self.factors["upper_thres"][i] * response_dict["arrival_counts"][i])
         stoch_constraints = tuple(lhs)
-        # print(stoch_constraints, type(stoch_constraints))
+        print(stoch_constraints, type(stoch_constraints))
         return stoch_constraints
 
     def deterministic_objectives_and_gradients(self, x):
