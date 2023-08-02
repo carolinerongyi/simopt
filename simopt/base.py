@@ -12,7 +12,7 @@ import os.path as o
 sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
 sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
 
-from auto_diff_util import bi_dict, replicate_wrapper
+# from auto_diff_util import bi_dict, replicate_wrapper
 # from mrg32k3a.mrg32k3a import MRG32k3a
 from mrg32k3a.mrg32k3a import MRG32k3a #when do the multinomial, change to the local
 
