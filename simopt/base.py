@@ -5,14 +5,18 @@ Summary
 Provide base classes for solvers, problems, and models.
 """
 
+
 import numpy as np
 from copy import deepcopy
 import sys
 import os.path as o
-sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
-sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
 
-# from auto_diff_util import bi_dict, replicate_wrapper
+sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+# sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
+from simopt.auto_diff_util import bi_dict, replicate_wrapper
+
+sys.path.append(o.abspath(o.join(o.dirname(sys.modules[__name__].__file__), "..")))
+
 # from mrg32k3a.mrg32k3a import MRG32k3a
 from mrg32k3a.mrg32k3a import MRG32k3a #when do the multinomial, change to the local
 
