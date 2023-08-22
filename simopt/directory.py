@@ -36,6 +36,7 @@ from .models.fixedsan import FixedSAN, FixedSANLongestPath
 from .models.network import Network, NetworkMinTotalCost
 from .models.amusementpark import AmusementPark, AmusementParkMinDepart
 from .models.openjackson import OpenJackson, OpenJacksonMinQueue, OpenJacksonMinQueueLagrange
+from .models.cascade import Cascade, CascadeMax
 
 # directory dictionaries
 solver_directory = {
@@ -89,7 +90,8 @@ problem_directory = {
     "NETWORK-1": NetworkMinTotalCost,
     "AMUSEMENTPARK-1": AmusementParkMinDepart,
     "OPENJACKSON-1": OpenJacksonMinQueue,
-    "OPENJACKSON-2": OpenJacksonMinQueueLagrange
+    "OPENJACKSON-2": OpenJacksonMinQueueLagrange,
+    "CASCADE-1": CascadeMax,
 }
 
 problem_unabbreviated_directory = {
@@ -115,7 +117,8 @@ problem_unabbreviated_directory = {
     "Min Total Cost for Communication Networks System (SDCN)": NetworkMinTotalCost,
     "Min Total Departed Visitors for Amusement Park (SDDN)": AmusementParkMinDepart,
     "Min Queue Length for Open Jackson Network ()": OpenJacksonMinQueue,
-    "Min Queue Length for Open Jackson Network Using Lagrange()": OpenJacksonMinQueueLagrange
+    "Min Queue Length for Open Jackson Network Using Lagrange()": OpenJacksonMinQueueLagrange,
+    "Max Activated Nodes Cascade Network ()": CascadeMax,
 }
 model_directory = {
     "EXAMPLE": ExampleModel,
@@ -136,7 +139,8 @@ model_directory = {
     "FIXEDSAN": FixedSAN,
     "NETWORK": Network,
     "AMUSEMENTPARK": AmusementPark,
-    "OPENJACKSON": OpenJackson
+    "OPENJACKSON": OpenJackson,
+    "CASCADE": Cascade,
 }
 model_unabbreviated_directory = {
     "Min Deterministic Function + Noise (SUCG)": "EXAMPLE",
@@ -160,5 +164,6 @@ model_unabbreviated_directory = {
     "Min Mean Longest Path for Fixed Stochastic Activity Network (SBCG)": "FIXEDSAN",
     "Min Total Cost for Communication Networks System (SDCN)": "NETWORK",
     "Min Total Departed Visitors for Amusement Park (SDDN)": "AMUSEMENTPARK",
-    "Min Queue Length for Open Jackson Network ()": "OPENJACKSON"
+    "Min Queue Length for Open Jackson Network ()": "OPENJACKSON",
+    "Max Activated Nodes Cascade Network ()": "CASCADE",
 }

@@ -33,8 +33,8 @@ from mrg32k3a.mrg32k3a import MRG32k3a
 import sys
   
 # # Insert the path of modules folder 
-sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
-# sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
+# sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
+sys.path.insert(0, "/Users/CarolineHerr/Documents/GitHub/simopt")
 
   
 # from simopt.models.openjackson import OpenJackson
@@ -43,10 +43,10 @@ sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
 # mymodel = OpenJackson(fixed_factors)
 # # -----------------------------------------------
 
-from simopt.models.fickleserver2 import FickleServer2
+from simopt.models.openjackson import OpenJackson
 # fixed_factors = {"lambda": 3.0, "mu": 8.0}
-# fixed_factors = {'steady_state_initialization': False}
-mymodel = FickleServer2()
+fixed_factors = {'steady_state_initialization': True}
+mymodel = OpenJackson()
 # -----------------------------------------------
 
 # The rest of this script requires no changes.
@@ -75,41 +75,39 @@ rng_list = [MRG32k3a(s_ss_sss_index=[0, ss, 0]) for ss in range(mymodel.n_rngs)]
 #     return IPA
 
 
-# IPA = [[] for _ in range(mymodel.factors['number_queues'])]
-# mu_IPA = []
-# IPA_CI = []
-# orig_grad = [[] for _ in range(mymodel.factors['number_queues'])]
-# service_mus = (10,10,10,10,10)
+IPA = [[] for _ in range(mymodel.factors['number_queues'])]
+mu_IPA = []
+IPA_CI = []
+orig_grad = [[] for _ in range(mymodel.factors['number_queues'])]
+service_mus = (10,10,10,10,10)
 
-# for i in range(1000):
-#     responses, gradients = mymodel.replicate(rng_list)
-#     waiting = responses['waiting_times']
-#     service = responses['service_times']
-#     for j in range(mymodel.factors['number_queues']):
-#         IPA[j].append(np.mean(IPA_MM1(waiting[j], service[j], service_mus[j])))
-#     print(i)
-# lambdas = mymodel.calc_lambdas()
-# orig_grad = gradients['total_jobs']['service_mus']
-# for j in range(mymodel.factors['number_queues']):
-#     mu_IPA.append(lambdas[j]*np.mean(IPA[j]))
-#     var_IPA = (lambdas[j]**2) * np.var(IPA[j])
-#     IPA_CI.append([mu_IPA[j] - 2.576 * np.sqrt(var_IPA/len(IPA[j])), mu_IPA[j] + 2.576 * np.sqrt(var_IPA/len(IPA[j]))])
+for i in range(1000):
+    responses, gradients = mymodel.replicate(rng_list)
+    waiting = responses['waiting_times']
+    service = responses['service_times']
+    for j in range(mymodel.factors['number_queues']):
+        IPA[j].append(np.mean(IPA_MM1(waiting[j], service[j], service_mus[j])))
+    print(i)
+lambdas = mymodel.calc_lambdas()
+orig_grad = gradients['total_jobs']['service_mus']
+for j in range(mymodel.factors['number_queues']):
+    mu_IPA.append(lambdas[j]*np.mean(IPA[j]))
+    var_IPA = (lambdas[j]**2) * np.var(IPA[j])
+    IPA_CI.append([mu_IPA[j] - 2.576 * np.sqrt(var_IPA/len(IPA[j])), mu_IPA[j] + 2.576 * np.sqrt(var_IPA/len(IPA[j]))])
 
-# print(IPA_CI)
-# print(orig_grad)
+print(IPA_CI)
+print(orig_grad)
     
 
 
 # Run a single replication of the model.
 responses, gradients = mymodel.replicate(rng_list)
-print(responses['arrival_record'][0][:5])
-print(responses['transfer_record'][0][:5])
-# print("\nFor a single replication:")
-# print("\nResponses:")
-# for key, value in responses.items():
-#     print(f"\t {key} is {value}.")
-# print("\n Gradients:")
-# for outerkey in gradients:
-#     print(f"\tFor the response {outerkey}:")
-#     for innerkey, value in gradients[outerkey].items():
-#         print(f"\t\tThe gradient w.r.t. {innerkey} is {value}.")
+print("\nFor a single replication:")
+print("\nResponses:")
+for key, value in responses.items():
+    print(f"\t {key} is {value}.")
+print("\n Gradients:")
+for outerkey in gradients:
+    print(f"\tFor the response {outerkey}:")
+    for innerkey, value in gradients[outerkey].items():
+        print(f"\t\tThe gradient w.r.t. {innerkey} is {value}.")

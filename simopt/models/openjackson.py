@@ -351,9 +351,14 @@ class OpenJackson(Model):
         num_customers = [0 for i in range(self.factors["number_queues"])] 
         # record where each customer is transferred from and their original place in the queue when one is served
         # update when a new customer is arrived or a customer is transferred
-        transfer_record = [[[-1] for j in range(queues[i])] for i in range(self.factors['number_queues'])]
+        transfer_record = [deque() for _ in range(self.factors["number_queues"])]
+        for i in range(self.factors["number_queues"]):
+            for j in range(queues[i]):
+                transfer_record[i].append(-1)
         # record the arrival times of new customers and transferred customers, update when new arrival happens or when transferred
         arrival_record = [list(time_entered[i]) for i in range(self.factors['number_queues'])]
+
+        IPA_record = []
         # Run simulation over time horizon.
         while clock < self.factors["t_end"]:
 
@@ -371,10 +376,11 @@ class OpenJackson(Model):
                 station = next_arrivals.index(next_arrival)
                 num_customers[station] += 1
                 arrival_record[station].append(clock)
-                transfer_record[station].append([-1])
                 queues[station] += 1
                 # record time entered
                 time_entered[station].append(clock)
+                # record transfer
+                transfer_record[station].append([-1])
 
                 next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
                 if queues[station] == 1:
@@ -383,17 +389,21 @@ class OpenJackson(Model):
                     completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                     # record service time
                     service_times[station].append(completion_times[station] - clock)
+                    IPA_record.append([station, num_customers[station], transfer_record[station].popleft()])
             else: # next event is a departure
+
                 station = completion_times.index(next_completion)
                 time_entered[station].popleft()
                 num_customers[station] += 1
                 queues[station] -= 1
+
                 if queues[station] > 0:
                     # record waiting time and remove element from time entered
                     waiting_times[station].append(clock - time_entered[station][0])
                     completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                     # record service time
                     service_times[station].append(completion_times[station] - clock)
+                    IPA_record.append([station, num_customers[station], transfer_record[station].popleft()])
                 else:
                     completion_times[station] = math.inf
                 
@@ -413,6 +423,7 @@ class OpenJackson(Model):
                         completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
                         # record service time
                         service_times[next_station].append(completion_times[next_station] - clock)
+                        IPA_record.append([station, num_customers[station], transfer_record[station].popleft()])
 
                 
         # end of simulation
@@ -426,7 +437,7 @@ class OpenJackson(Model):
 
         responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
                       "total_jobs": sum(average_queue_length), 'waiting_times': waiting_times, 'service_times': service_times,
-                      "arrival_record": arrival_record, "transfer_record": transfer_record}
+                      "arrival_record": arrival_record, "transfer_record": transfer_record, 'IPA_record': IPA_record}
         # responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
         #               "total_jobs": sum(average_queue_length)}
         gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in responses}
