@@ -12,7 +12,7 @@ TODO.
 
 import autograd.numpy as np
 from ..base import Auto_Model, Problem
-from ..auto_diff_util import factor_dict, resp_dict_to_array, replicate_wrapper# WHERE
+from ..auto_diff_util_h import factor_dict, resp_dict_to_array, replicate_wrapper# WHERE
 
 
 class FickleServer2(Auto_Model):
@@ -59,6 +59,7 @@ class FickleServer2(Auto_Model):
         # random instance factors: number_queues, arrival_alphas, service_mus, routing_matrix
         self.n_responses = 2
         self.response_names = ['EL1', 'EL2', 'EL3', 'EL4', 'EL5', 'EL6','arrival_counts', "late_calls"]
+        
         self.specifications = {
             "T": {
                 "description": "simulation length",
@@ -73,41 +74,46 @@ class FickleServer2(Auto_Model):
             "lambdas": {
                 "description": "rate parameter of interarrival time distribution",
                 "datatype": list,
-                "default": [1, 1, 60, 60, 1, 1] # [1/20, 1/30, 1/60, 1/60, 1/30, 1/20] # interarrival time in hours
+                "default": [20, 30, 60, 60, 30, 20] # [1/20, 1/30, 1/60, 1/60, 1/30, 1/20] # interarrival time in hours
             },
-            "mu1": {
-                "description": "rate parameter of service time distribution",
-                "datatype": float,
-                "default": 1.5
+            "mus":{
+                "description": "rate parameter of servicee time distribution",
+                "datatype": list,
+                "default": [1,2,3,0.5,1.5,1.5]
             },
-            "mu2": {
-                "description": "rate parameter of service time distribution",
-                "datatype": float,
-                "default": 1.5
-            },
-            "mu3": {
-                "description": "rate parameter of service time distribution",
-                "datatype": float,
-                "default": 60
-            },
-            "mu4": {
-                "description": "rate parameter of service time distribution",
-                "datatype": float,
-                "default": 60
-            },
-            "mu5": {
-                "description": "rate parameter of service time distribution",
-                "datatype": float,
-                "default": 1.5
-            },
-            "mu6": {
-                "description": "rate parameter of service time distribution",
-                "datatype": float,
-                "default": 1.5
-            },
+            # "mu1": {
+            #     "description": "rate parameter of service time distribution",
+            #     "datatype": float,
+            #     "default": 1.5
+            # },
+            # "mu2": {
+            #     "description": "rate parameter of service time distribution",
+            #     "datatype": float,
+            #     "default": 1.5
+            # },
+            # "mu3": {
+            #     "description": "rate parameter of service time distribution",
+            #     "datatype": float,
+            #     "default": 60
+            # },
+            # "mu4": {
+            #     "description": "rate parameter of service time distribution",
+            #     "datatype": float,
+            #     "default": 60
+            # },
+            # "mu5": {
+            #     "description": "rate parameter of service time distribution",
+            #     "datatype": float,
+            #     "default": 1.5
+            # },
+            # "mu6": {
+            #     "description": "rate parameter of service time distribution",
+            #     "datatype": float,
+            #     "default": 1.5
+            # },
             "late_threshold": {
                 "description": "threshold for late calls",
-                "datatype": int,
+                "datatype": float,
                 "default": 1/180 # 20 seconds
             }
         }
@@ -115,15 +121,18 @@ class FickleServer2(Auto_Model):
             "T": self.check_T,
             "N": self.check_N,
             "lambdas": self.check_lambdas,
-            # "mus": self.check_mus,
-            "mu1" : self.check_mu1,
-            "mu2" : self.check_mu2,
-            "mu3" : self.check_mu3,
-            "mu4" : self.check_mu4,
-            "mu5" : self.check_mu5,
-            "mu6" : self.check_mu6,
+            "mus": self.check_mus,
+            # "mu1" : self.check_mu1,
+            # "mu2" : self.check_mu2,
+            # "mu3" : self.check_mu3,
+            # "mu4" : self.check_mu4,
+            # "mu5" : self.check_mu5,
+            # "mu6" : self.check_mu6,
             "late_threshold": self.check_late_threshold
         }
+        # self.response_names = ['arrival_counts', "late_calls"]
+        # for i in range(self.specifications('N')):
+        #     self.response_names.append("EL" + str(i+1))
         # Set factors of the simulation model.
         super().__init__(fixed_factors)
         
@@ -136,26 +145,26 @@ class FickleServer2(Auto_Model):
     def check_lambdas(self):
         return all(lambd > 0 for lambd in self.factors["lambdas"])
 
-    # def check_mus(self):
-    #     return all(mu > 0 for mu in self.factors["mus"])
+    def check_mus(self):
+        return all(mu > 0 for mu in self.factors["mus"])
 
-    def check_mu1(self):
-        return self.factors["mu1"] > 0
+    # def check_mu1(self):
+    #     return self.factors["mu1"] > 0
     
-    def check_mu2(self):
-        return self.factors["mu2"] > 0
+    # def check_mu2(self):
+    #     return self.factors["mu2"] > 0
     
-    def check_mu3(self):
-        return self.factors["mu3"] > 0
+    # def check_mu3(self):
+    #     return self.factors["mu3"] > 0
     
-    def check_mu4(self):
-        return self.factors["mu4"] > 0
+    # def check_mu4(self):
+    #     return self.factors["mu4"] > 0
     
-    def check_mu5(self):
-        return self.factors["mu5"] > 0
+    # def check_mu5(self):
+    #     return self.factors["mu5"] > 0
     
-    def check_mu6(self):
-        return self.factors["mu6"] > 0
+    # def check_mu6(self):
+    #     return self.factors["mu6"] > 0
 
     def check_late_threshold(self):
         return self.factors["late_threshold"] >= 0
@@ -208,15 +217,19 @@ class FickleServer2(Auto_Model):
         for arr_time in arrival_times:
             # Case 1: service would finish within a period
             time_period = int(arr_time//(T/N))
-            service_time = service_rng.expovariate(factors["mu"+str(time_period + 1)])
+            # service_time = service_rng.expovariate(factors["mu"+str(time_period + 1)])
+            service_time = service_rng.expovariate(factors["mus"][(time_period)])
             # Case 2: service would finish after T
             if arr_time + service_time >= T:
                 service_time = T - arr_time
             # Case 3: service time would cross a period boundary
             elif arr_time + service_time > (int(arr_time/(T/N)) + 1) * int(T/N):
-                amount_finished = factors["mu"+str(time_period + 1)] * ((int(arr_time/(T/N)) + 1) * (T/N) - (arr_time + service_time))
+                # amount_finished = factors["mu"+str(time_period + 1)] * ((int(arr_time/(T/N)) + 1) * (T/N) - (arr_time + service_time))
+                amount_finished = factors["mus"][(time_period)] * ((int(arr_time/(T/N)) + 1) * (T/N) - (arr_time + service_time))
                 amount_left = service_rng.expovariate(1) - amount_finished 
-                service_time_left = amount_left / factors["mu"+str(time_period + 2)]
+                # service_time_left = amount_left / factors["mu"+str(time_period + 2)] ---------------------------
+                service_time_left = amount_left / factors["mus"][(time_period + 1)]
+                service_time = service_rng.expovariate(factors["mus"][(time_period )])
                 service_time = (int(arr_time/(T/N)) + 1) * (T/N) - arr_time + service_time_left
             service_times.append(service_time)
             
@@ -244,7 +257,8 @@ class FickleServer2(Auto_Model):
             if y < 0:
                 ELi = 1 
             else:
-                ELi = np.exp(-1/(y * factors["mu" + str(int(arrival_times[i]//(T/N))+1)]))
+                # ELi = np.exp(-1/(y * factors["mu" + str(int(arrival_times[i]//(T/N))+1)]))
+                ELi = np.exp(-1/(y * factors["mus"][(int(arrival_times[i]//(T/N)))]))
             EL[int(arrival_times[i]//(T/N))] += ELi
 
         # EL = [x for x in EL]
@@ -360,7 +374,7 @@ class FickleServerMinServiceRate2(Problem):
             "initial_solution": {
                 "description": "initial solution from which solvers start",
                 "datatype": tuple,
-                "default": tuple([10,10,20,20,30,30])
+                "default": tuple([60,10,20,20,30,30])
                 # "default": tuple([10,10,20,20,30,30,60,60,80,80,60,60,30,30,20,20,10,10])
             },
             "budget": {
@@ -372,7 +386,7 @@ class FickleServerMinServiceRate2(Problem):
                 "description": "upper limit of amount of contamination",
                 "datatype": list,
                 # "default": tuple([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
-                "default": tuple([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+                "default": tuple([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
             }
         }
         self.check_factor_list = {

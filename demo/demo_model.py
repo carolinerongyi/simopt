@@ -102,14 +102,14 @@ rng_list = [MRG32k3a(s_ss_sss_index=[0, ss, 0]) for ss in range(mymodel.n_rngs)]
 
 # Run a single replication of the model.
 responses, gradients = mymodel.replicate(rng_list)
-print(responses['arrival_record'][0][:5])
-print(responses['transfer_record'][0][:5])
-# print("\nFor a single replication:")
-# print("\nResponses:")
-# for key, value in responses.items():
-#     print(f"\t {key} is {value}.")
-# print("\n Gradients:")
-# for outerkey in gradients:
-#     print(f"\tFor the response {outerkey}:")
-#     for innerkey, value in gradients[outerkey].items():
-#         print(f"\t\tThe gradient w.r.t. {innerkey} is {value}.")
+# print(responses['arrival_record'][0][:5])
+# print(responses['transfer_record'][0][:5])
+print("\nFor a single replication:")
+print("\nResponses:")
+for key, value in responses.items():
+    print(f"\t {key} is {value}.")
+print("\n Gradients:")
+for outerkey in gradients:
+    print(f"\tFor the response {outerkey}:")
+    for innerkey, value in gradients[outerkey].items():
+        print(f"\t\tThe gradient w.r.t. {innerkey} is {value}.")
