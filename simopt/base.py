@@ -829,9 +829,17 @@ class Auto_Model(Model):
         # fill in missing factors with default values
         super(Auto_Model, self).__init__(fixed_factors)
         self.differentiable_factor_names = []
+
+        #### To be changed for autograd by Hagen 
         for key in self.specifications:
             if self.specifications[key]["datatype"] == float:
                 self.differentiable_factor_names.append(key)
+        ## Hagen changes
+            if self.specifications[key]["datatype"] == tuple:
+                self.differentiable_factor_names.append(key)
+            if self.specifications[key]["datatype"] == list:
+                self.differentiable_factor_names.append(key)
+
         self.bi_dict = bi_dict(self.response_names)
                 
     def innner_replicate(self, rng_list):
