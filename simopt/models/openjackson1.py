@@ -113,12 +113,12 @@ class OpenJackson(Model):
                             [0.1, 0.1, 0.1, 0.1, 0.2]]
             },
             "t_end": {
-                "description": "A number of replications to run",
+                "description": "The time at which the simulation ends.",
                 "datatype": int,
                 "default": 200
             },
             "warm_up": {
-                "description": "A number of replications to use as a warm up period",
+                "description": "The time at which the warm-up period ends.",
                 "datatype": int,
                 "default": 100
             },
@@ -227,59 +227,7 @@ class OpenJackson(Model):
 
         return
 
-    def get_IPA(Dl, V, W, q, k, mu, self):  # D is the dictionary, St L[i][1]: ith arrive cust's 
-        def I(x, k):
-            if x==k:
-                return 1
-            else:
-                return 0
-        IA, IW = [[] for i in range(q)], [[-V[i][0]/mu * I(i, k)] for i in range(q)]
-        for i in range(len(Dl)):
-            queue = int(Dl[i][0])
-            idx = Dl[i][1]
-            v = V[queue][idx]
-            if idx == 0:
-                if Dl[i][2][0] == -1:
-                    IA[queue].append(0)
-                else:
-                    pre_queue = Dl[i][2][0] 
-                    pre_idx = Dl[i][2][1]-1
-                    print('i: ', i, ', prequeue: ', pre_queue, ', pre_idx: ', pre_idx)
-                    # print('iwww', IW[pre_queue], IA[pre_queue])
-                    if len(IA[pre_queue]) == 0:   # Warm up bug..
-                        print('warmup')
-                        a = 0
-                    else:
-                        a = IW[pre_queue][pre_idx] + IA[pre_queue][pre_idx]
-                    IA[queue].append(a)
-            else:
-                # Calculate IA
-                if Dl[i][2][0] == -1:
-                    IA[queue].append(0)
-                else:
-                    pre_queue = Dl[i][2][0] 
-                    pre_idx = Dl[i][2][1]-1
-                    print(pre_queue, pre_idx, IW[pre_queue], IA[pre_queue])
-                    if len(IA[pre_queue]) == 0:   # Warm up bug..
-                        print('warmup')
-                        a = 0
-                    else: 
-                        a = IW[pre_queue][pre_idx] + IA[pre_queue][pre_idx]
-                    # print('i: ', i, ', prequeue: ', pre_queue, ', pre_idx: ', pre_idx)
-                    # print('a', a)
-                    IA[queue].append(a)
-                if W[queue][idx] <= 0:
-                    v = -V[queue][idx]/mu * I(queue, k)
-                    IW[queue].append(v)
-                else:
-                    v = -V[queue][idx]/mu * I(queue, k) + IW[queue][idx-1]
-                    # print('pre: ', IA[queue][idx-1])
-                    # print('it: ', IA[queue][idx])
-                    u = IA[queue][idx-1] - IA[queue][idx]
-                    IW[queue].append(u + v)
-    
-        return IA, IW
-    
+
     def replicate(self, rng_list):
         """
         Simulate a single replication for the current model factors.
@@ -375,6 +323,7 @@ class OpenJackson(Model):
                 else: # next event is a departure
                     station = completion_times.index(next_completion)
                     queues[station] -= 1
+                    time_entered[station].popleft()
                     if queues[station] > 0:
                         completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                     else:
@@ -389,7 +338,6 @@ class OpenJackson(Model):
                         # record time entered
                         time_entered[next_station].append(clock)
                         if queues[next_station] == 1:
-                            time_entered[next_station].popleft()
                             completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
             next_arrivals = [next_arrivals[i] - clock for i in range(self.factors["number_queues"])]
             completion_times = [completion_times[i] - clock for i in range(self.factors["number_queues"])]
@@ -400,16 +348,13 @@ class OpenJackson(Model):
             previous_clock = 0
 
         # keep track of how many customers have finished service, update when a customer finishes serving
-        num_customers = [-1 for i in range(self.factors["number_queues"])] 
-        # for i in range(self.factors["number_queues"]):
-        #     if queues[i] == 0:
-        #         num_customers[i] = -1
+        num_customers = [0 for i in range(self.factors["number_queues"])] 
         # record where each customer is transferred from and their original place in the queue when one is served
         # update when a new customer is arrived or a customer is transferred
         transfer_record = [deque() for _ in range(self.factors["number_queues"])]
         for i in range(self.factors["number_queues"]):
             for j in range(queues[i]):
-                transfer_record[i].append([-1])
+                transfer_record[i].append(-1)
         # record the arrival times of new customers and transferred customers, update when new arrival happens or when transferred
         arrival_record = [list(time_entered[i]) for i in range(self.factors['number_queues'])]
 
@@ -429,20 +374,18 @@ class OpenJackson(Model):
 
             if next_arrival < next_completion: # next event is an arrival]
                 station = next_arrivals.index(next_arrival)
-                # num_customers[station] += 1
+                num_customers[station] += 1
                 arrival_record[station].append(clock)
-                transfer_record[station].append([-1])
                 queues[station] += 1
                 # record time entered
                 time_entered[station].append(clock)
                 # record transfer
-                # transfer_record[station].append([-1])
+                transfer_record[station].append([-1])
 
                 next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
                 if queues[station] == 1:
-                    num_customers[station] += 1
                     # record waiting time and remove element from time entered
-                    waiting_times[station].append(clock - time_entered[station].popleft())
+                    waiting_times[station].append(clock - time_entered[station][0])
                     completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                     # record service time
                     service_times[station].append(completion_times[station] - clock)
@@ -450,18 +393,13 @@ class OpenJackson(Model):
             else: # next event is a departure
 
                 station = completion_times.index(next_completion)
-                # num_customers[station] += 1
+                time_entered[station].popleft()
+                num_customers[station] += 1
                 queues[station] -= 1
 
-
-                # record the customer's index in the queue and the station it is transferred from, formatted as [station, index, transfer_from]
-                # transfer = transfer_record[station].popleft()
-                # IPA_record.append([station, num_customers[station], transfer])
-
                 if queues[station] > 0:
-                    num_customers[station] += 1
                     # record waiting time and remove element from time entered
-                    waiting_times[station].append(clock - time_entered[station].popleft())
+                    waiting_times[station].append(clock - time_entered[station][0])
                     completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                     # record service time
                     service_times[station].append(completion_times[station] - clock)
@@ -476,31 +414,19 @@ class OpenJackson(Model):
                     next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
                     queues[next_station] += 1
                     arrival_record[next_station].append(clock)
-                    if num_customers[station] == -1:
-                        transfer_record[next_station].append([-1])
-                    else:
-                        transfer_record[next_station].append([station, num_customers[station]])
+                    transfer_record[next_station].append([station, num_customers[station]])
                     # record time entered
                     time_entered[next_station].append(clock)
                     if queues[next_station] == 1:
-                        num_customers[next_station] += 1
-                        # record waiting time and remove element from time_entered
-                        waiting_times[next_station].append(clock - time_entered[next_station].popleft())
+                        # record waiting time and remove element from 
+                        waiting_times[next_station].append(clock - time_entered[next_station][0])
                         completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
                         # record service time
                         service_times[next_station].append(completion_times[next_station] - clock)
-                        IPA_record.append([next_station, num_customers[next_station], transfer_record[next_station].popleft()])
+                        IPA_record.append([station, num_customers[station], transfer_record[station].popleft()])
 
                 
         # end of simulation
-
-
-
-
-        
-        # IPA_gradient = []
-        # for j in range(self.factors['number_queues']):
-        #     IPA_gradient.append(self.get_IPA(IPA_record, service_times, waiting_times, self.factors['number_queues'], j, self.factors['service_mus'][j]))
 
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
@@ -509,10 +435,9 @@ class OpenJackson(Model):
         lagrange_obj = sum(average_queue_length) + 0.5*sum(self.factors['service_mus'])
         lagrange_grad = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(2) + 1 for i in range(self.factors['number_queues'])]
 
-        responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
+        responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length": expected_queue_length,
                       "total_jobs": sum(average_queue_length), 'waiting_times': waiting_times, 'service_times': service_times,
                       "arrival_record": arrival_record, "transfer_record": transfer_record, 'IPA_record': IPA_record}
-        # responses = {"average_queue_length": average_queue_length}
         # responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
         #               "total_jobs": sum(average_queue_length)}
         gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in responses}
