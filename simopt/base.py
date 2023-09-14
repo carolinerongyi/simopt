@@ -828,7 +828,7 @@ class Auto_Model(Model):
         # set factors of the simulation model
         # fill in missing factors with default values
         super(Auto_Model, self).__init__(fixed_factors)
-        self.differentiable_factor_names = []
+        self.differentiable_factor_names = []#list('dtype = object')
 
         #### To be changed for autograd by Hagen 
         for key in self.specifications:
@@ -837,6 +837,13 @@ class Auto_Model(Model):
         ## Hagen changes
             if self.specifications[key]["datatype"] == tuple:
                 self.differentiable_factor_names.append(key)
+                # tup_length = len(self.specifications[key])
+                # if tup_length <= 3:
+                #     for i in range(tup_length):
+                #         self.differentiable_factor_names.append(key + str(chr(120+i)))
+                # else:
+                #     for i in range(tup_length):
+                #         self.differentiable_factor_names.append(key + str(i))
             if self.specifications[key]["datatype"] == list:
                 self.differentiable_factor_names.append(key)
 
