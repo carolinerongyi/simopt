@@ -53,7 +53,7 @@ class GASSO(Solver):
             fixed_factors = {}
         self.name = name
         self.objective_type = "single"
-        self.constraint_type = "box" # ??
+        self.constraint_type = "box" 
         self.variable_type = "continuous"
         self.gradient_needed = True
         self.specifications = {
@@ -141,10 +141,11 @@ class GASSO(Solver):
         return self.factors["MaxNumSoln"] > 0
     
     def solve(self, problem): # Initialize
-        Ancalls = np.zeros(MaxNumSoln, 1)
+        dim = problem.dim
+        Ancalls = np.zeros(MaxNumSoln)
         A = np.zeros(MaxNumSoln, dim)
-        AFnMean = np.zeros(MaxNumSoln, 1)
-        AFnVar = np.zeros(MaxNumSoln, 1)
+        AFnMean = np.zeros(MaxNumSoln)
+        AFnVar = np.zeros(MaxNumSoln)
         
         Ancalls[0] = 0
         A[0, :] = problem.factors["initial_solution"]
@@ -156,7 +157,6 @@ class GASSO(Solver):
         theta1_k = mu_k/var_k
         theta2_k = -0.5 * np.ones(problem.dim) / var_k
         theta_k = np.vstack((theta1_k, theta2_k )) ######
-        dim = problem.dim
         N = int(50 * np.sqrt(dim))
         K = np.floor(problem.factors['budget']/(N * self.factors['M']))
         MaxNumSoln = K + 2
@@ -165,7 +165,7 @@ class GASSO(Solver):
         intermediate_budgets = []
         expended_budget = 0
         # Designate random number generator for random sampling.
-        find_next_soln_rng = self.rng_list[1]
+        find_next_soln_rng = self.rng_list[0]
         
         # Get random solutions from normal distribution (truncated)
         x = np.zeros(N, dim)
