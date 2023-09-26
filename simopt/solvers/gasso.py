@@ -147,8 +147,7 @@ class GASSO(Solver):
         AFnMean = np.zeros(MaxNumSoln)
         AFnVar = np.zeros(MaxNumSoln)
         
-        Ancalls[0] = 0
-        A[0, :] = problem.factors["initial_solution"]
+        A = problem.factors["initial_solution"]
         AFnMean[0] = None
         AFnVar[0] = None
 
@@ -178,16 +177,16 @@ class GASSO(Solver):
                     kk += 1
         X_k = x
 
-        new_solution = self.create_new_solution(X_k, problem)
-        recommended_solns.append(new_solution)
-        intermediate_budgets.append(expended_budget)
-        problem.simulate(new_solution, self.factors['M'])
-        expended_budget += self.factors['M']
-        best_solution = new_solution
+        # new_solution = self.create_new_solution(X_k, problem)
+        # recommended_solns.append(new_solution)
+        # intermediate_budgets.append(expended_budget)
+        # problem.simulate(new_solution, self.factors['M'])
+        # expended_budget += self.factors['M']
+        # best_solution = new_solution
 
-        Hbar = np.zeors(K, 1)
+        Hbar = np.zeors(K)
         xbar = np.zeros(K, dim)
-        hvar = np.zeros(K, 1)
+        hvar = np.zeros(K)
         Ntotal = 0
         k = 0
 
@@ -197,8 +196,8 @@ class GASSO(Solver):
             # while k <= K:
             X_k = new_solution.x
             alpha_k = self.factors['alpha_0'] / (k + self.factors['alpha_c']) ** self.factors['alpha_p']
-            H = np.zeros(N, 1)
-            H_var = np.zeros(N, 1)
+            H = np.zeros(N)
+            H_var = np.zeros(N)
             for i in range(N):
                 new_solution = self.create_new_solution(X_k[i, :], problem)
                 intermediate_budgets.append(expended_budget)
@@ -264,14 +263,14 @@ class GASSO(Solver):
             k += 1
             X_k = x
 
-        Ancalls[1: K + 1] = intermediate_budgets
-        A[1: K + 1, :] = xbar
-        AFnMean[1: K + 1] = problem.minmax * Hbar
-        AFnVar[1: K + 1] = hvar
+        # Ancalls[1: K + 1] = intermediate_budgets
+        # A[1: K + 1, :] = xbar
+        # AFnMean[1: K + 1] = problem.minmax * Hbar
+        # AFnVar[1: K + 1] = hvar
 
-        Ancalls[K + 1] = problem.factors['budget']
-        A[K + 1, :] = xbar[K - 1, :]
-        AFnMean[K + 1] = problem.minmax * Hbar[K - 1]
-        AFnVar[K + 1] = hvar[K - 1]
+        # Ancalls[K + 1] = problem.factors['budget']
+        # A[K + 1, :] = xbar[K - 1, :]
+        # AFnMean[K + 1] = problem.minmax * Hbar[K - 1]
+        # AFnVar[K + 1] = hvar[K - 1]
 
         return recommended_solns, intermediate_budgets
