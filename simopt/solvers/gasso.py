@@ -155,7 +155,7 @@ class GASSO(Solver):
         var_k = np.var(problem.factors["initial_solution"])
         theta1_k = mu_k/var_k
         theta2_k = -0.5 * np.ones(problem.dim) / var_k
-        theta_k = [theta1_k, theta2_k]
+        theta_k = np.vstack((theta1_k, theta2_k )) ######
         dim = problem.dim
         N = int(50 * np.sqrt(dim))
         K = np.floor(problem.factors['budget']/(N * self.factors['M']))
@@ -173,62 +173,105 @@ class GASSO(Solver):
         while kk < N:
             X_k = find_next_soln_rng.random(N, dim) * np.diag(np.sqrt(var_k)) + np.ones(N, 1) * mu_k
             for i in range(N):
-                if all(X_k[i, :] >= problem.lb) and all(X_k[i, :] <= problem.ub):
+                if all(X_k[i, :] >= problem.lb) and all(X_k[i, :] <= problem.ub) and kk < N:
                     x[kk, :] = X_k[i, :]
                     kk += 1
         X_k = x
-        
-        
-        
-        
-        
 
-    # def solve(self, problem):
-    #     """
-    #     Run a single macroreplication of a solver on a problem.
+        new_solution = self.create_new_solution(X_k, problem)
+        recommended_solns.append(new_solution)
+        intermediate_budgets.append(expended_budget)
+        problem.simulate(new_solution, self.factors['M'])
+        expended_budget += self.factors['M']
+        best_solution = new_solution
 
-    #     Arguments
-    #     ---------
-    #     problem : Problem object
-    #         simulation-optimization problem to solve
-    #     crn_across_solns : bool
-    #         indicates if CRN are used when simulating different solutions
+        Hbar = np.zeors(K, 1)
+        xbar = np.zeros(K, dim)
+        hvar = np.zeros(K, 1)
+        Ntotal = 0
+        k = 0
 
-    #     Returns
-    #     -------
-    #     recommended_solns : list of Solution objects
-    #         list of solutions recommended throughout the budget
-    #     intermediate_budgets : list of ints
-    #         list of intermediate budgets when recommended solutions changes
-    #     """
-    #     recommended_solns = []
-    #     intermediate_budgets = []
-    #     expended_budget = 0
-    #     # Designate random number generator for random sampling.
-    #     find_next_soln_rng = self.rng_list[1]
-    #     # Sequentially generate random solutions and simulate them.
-    #     while expended_budget < problem.factors["budget"]:
-    #         if expended_budget == 0:
-    #             # Start at initial solution and record as best.
-    #             new_x = problem.factors["initial_solution"]
-    #             new_solution = self.create_new_solution(new_x, problem)
-    #             best_solution = new_solution
-    #             recommended_solns.append(new_solution)
-    #             intermediate_budgets.append(expended_budget)
-    #         else:
-    #             # Identify new solution to simulate.
-    #             new_x = problem.get_random_solution(find_next_soln_rng)
-    #             new_solution = self.create_new_solution(new_x, problem)
-    #         # Simulate new solution and update budget.
-    #         problem.simulate(new_solution, self.factors["sample_size"])
-    #         expended_budget += self.factors["sample_size"]
-    #         # Check for improvement relative to incumbent best solution.
-    #         # Also check for feasibility w.r.t. stochastic constraints.
-    #         if (problem.minmax * new_solution.objectives_mean
-    #                 > problem.minmax * best_solution.objectives_mean and
-    #                 all(new_solution.stoch_constraints_mean[idx] <= 0 for idx in range(problem.n_stochastic_constraints))):
-    #             # If better, record incumbent solution as best.
-    #             best_solution = new_solution
-    #             recommended_solns.append(new_solution)
-    #             intermediate_budgets.append(expended_budget)
-    #     return recommended_solns, intermediate_budgets
+        # Sequentially generate random solutions and simulate them.
+        while expended_budget < problem.factors['budget']:
+            # Iterations
+            # while k <= K:
+            X_k = new_solution.x
+            alpha_k = self.factors['alpha_0'] / (k + self.factors['alpha_c']) ** self.factors['alpha_p']
+            H = np.zeros(N, 1)
+            H_var = np.zeros(N, 1)
+            for i in range(N):
+                new_solution = self.create_new_solution(X_k[i, :], problem)
+                intermediate_budgets.append(expended_budget)
+                problem.simulate(new_solution, self.factors['M'])
+                expended_budget += self.factors['M']
+                # best_solution = new_solution
+                H[i] = problem.minmax * new_solution.objectives_mean
+                H_var = 3#################
+            # new_solution = np.mean(X_k, axis = 0)
+            # recommended_solns.append(new_solution)
+            Hbar[k], idx = np.max(H), np.argmax(H)
+            hvar[k] = H_var[idx]
+            xbar[k, :] = X_k[idx, :]
+            new_solution = X_k[idx, :]
+            recommended_solns.append(new_solution)
+
+            if k >= 1:
+                if Hbar[k] < Hbar[k-1] and Hbar[k] != None:
+                    Hbar[k] = Hbar[k-1]
+                    xbar[k, :] = xbar[k-1, :]
+                    hvar[k] = hvar[k-1]
+                    best_solution = xbar[k-1, :]
+                    recommended_solns[-1] = xbar[k-1, :]
+            
+            # Shape function
+            G_sort = np.sort(H)[::-1]
+            gm = G_sort[np.ceil(N * self.factors['rho'])]
+            S_theta = H > gm
+
+            # Estimate gradient and hessian
+            w_k = S_theta/sum(S_theta)
+            CX_k = np.vstack((X_k, X_k * X_k)).T  #element wise product
+            grad_k = np.matmul(w_k.T, CX_k) - np.vstack((mu_k, var_k + mu_k * mu_k)).T # [mu_k, var_k + mu_k * mu_k]
+            Hes_k = -np.cov(CX_k, rowvar=False)
+            Hes_k_inv = np.linalg.inv(Hes_k + 1e-8 * np.eye(2*dim)) @ np.diag(np.ones(2*dim))
+
+            # Update the parameter using an SA iteration
+            theta_k -= alpha_k * (Hes_k_inv @ grad_k.T).T #######
+            theta1_k = theta_k[:dim]
+            theta2_k = theta_k[dim: 2 * dim]
+            var_k = -0.5/theta2_k
+            mu_k = theta1_k * var_k
+
+            # Project mu_k and var_k to feasible parameter space
+            for i in range(dim):
+                if mu_k[i] < problem.lb:
+                    mu_k[i] = problem.lb
+                if mu_k[i] > problem.ub:
+                    mu_k[i] = problem.ub
+            var_k = abs(var_k)
+
+            # Set the stream for generating random candidate solutions
+
+            # Generate candidate solutions from the normal distribution
+            x = np.zeros(N, dim)
+            kk = 0
+            while kk < N:
+                X_k = find_next_soln_rng.random(N, dim) * np.diag(np.sqrt(var_k)) + np.ones(N, 1) * mu_k
+                for i in range(N):
+                    if all(X_k[i, :] >= problem.lb) and all(X_k[i, :] <= problem.ub) and kk < N:
+                        x[kk, :] = X_k[i, :]
+                        kk += 1
+            k += 1
+            X_k = x
+
+        Ancalls[1: K + 1] = intermediate_budgets
+        A[1: K + 1, :] = xbar
+        AFnMean[1: K + 1] = problem.minmax * Hbar
+        AFnVar[1: K + 1] = hvar
+
+        Ancalls[K + 1] = problem.factors['budget']
+        A[K + 1, :] = xbar[K - 1, :]
+        AFnMean[K + 1] = problem.minmax * Hbar[K - 1]
+        AFnVar[K + 1] = hvar[K - 1]
+
+        return recommended_solns, intermediate_budgets
