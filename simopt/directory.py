@@ -37,6 +37,7 @@ from .models.network import Network, NetworkMinTotalCost
 from .models.amusementpark import AmusementPark, AmusementParkMinDepart
 from .models.openjackson import OpenJackson, OpenJacksonMinQueue, OpenJacksonMinQueueLagrange
 from .models.cascade import Cascade, CascadeMax
+from .models.diffexample import DiffExampleModel, DiffExampleProblem
 
 # directory dictionaries
 solver_directory = {
@@ -92,6 +93,7 @@ problem_directory = {
     "OPENJACKSON-1": OpenJacksonMinQueue,
     "OPENJACKSON-2": OpenJacksonMinQueueLagrange,
     "CASCADE-1": CascadeMax,
+    "DIFFEX": DiffExampleProblem,
 }
 
 problem_unabbreviated_directory = {
@@ -119,6 +121,7 @@ problem_unabbreviated_directory = {
     "Min Queue Length for Open Jackson Network ()": OpenJacksonMinQueue,
     "Min Queue Length for Open Jackson Network Using Lagrange()": OpenJacksonMinQueueLagrange,
     "Max Activated Nodes Cascade Network ()": CascadeMax,
+    "auto differentiate problem" :DiffExampleProblem,
 }
 model_directory = {
     "EXAMPLE": ExampleModel,
@@ -141,6 +144,7 @@ model_directory = {
     "AMUSEMENTPARK": AmusementPark,
     "OPENJACKSON": OpenJackson,
     "CASCADE": Cascade,
+    "DIFFEX" : DiffExampleModel,
 }
 model_unabbreviated_directory = {
     "Min Deterministic Function + Noise (SUCG)": "EXAMPLE",
@@ -166,4 +170,5 @@ model_unabbreviated_directory = {
     "Min Total Departed Visitors for Amusement Park (SDDN)": "AMUSEMENTPARK",
     "Min Queue Length for Open Jackson Network ()": "OPENJACKSON",
     "Max Activated Nodes Cascade Network ()": "CASCADE",
+    "Simple differentiable model":"DIFFEX",
 }

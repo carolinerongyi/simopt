@@ -1,8 +1,10 @@
+'''
+This is a conversion file so that Simopt models can be auto_differentiated using autograd
+'''
 from __future__ import absolute_import
 from autograd.wrap_util import unary_to_nary
 from autograd.core import make_vjp as _make_vjp, make_jvp as _make_jvp
 from autograd.extend import vspace
-
 import autograd.numpy as np
 
 
@@ -42,8 +44,12 @@ def get_response_indx_list(response_names, bi_dict):
 
 def get_diff_factor_arr(diff_factor_name_list, factor_dict):
     '''
-    Takes in a list of names of the differentiable factors and a dictionary of factor values and returns a dictionary of the differentiable
-    factor names and values. This is an extended list if the tuple is of length 3 or less then it appends x,y,z if longer than appends a number
+    Takes in a list of names of the differentiable factors and a dictionary of factor values and 
+    returns a dictionary of the differentiable factor names and values and a array of the names.
+    This is an extended list if the tuple is of length 3 or less then it appends _x,_y,_z if 
+    longer than appends a number starting with _0,_1,_2, ect.
+
+    factor_dict : the working list of all factorsS
     '''
     # print('diff_factor_name_list', diff_factor_name_list)
     diff_factor_list = []
@@ -170,7 +176,7 @@ def factor_dict(model, diff_factors):
                     factor_dict[name + "_" + str(chr(120+j))] = (diff_factors[i+counter+j])
             else:
                  for j in range(tup_length):
-                    factor_dict[name + "_" + str(j)]= (diff_factors[name][i+counter+j])
+                    factor_dict[name + "_" + str(j)]= (diff_factors[i+counter+j])
             counter += tup_length-1
     return factor_dict
         
