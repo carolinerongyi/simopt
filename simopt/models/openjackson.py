@@ -280,6 +280,7 @@ class OpenJackson(Model):
     
         return IA, IW
     
+    
     def replicate(self, rng_list):
         """
         Simulate a single replication for the current model factors.
@@ -314,14 +315,7 @@ class OpenJackson(Model):
         #calculate expected value of queue length as rho/(1-rho)
         expected_queue_length = (rho)/(1-rho)
 
-        # keep track of waiting time for all customers
-        waiting_times = [[] for _ in range(self.factors["number_queues"])]
-        
-        # keep track of service times for all customers
-        service_times = [[] for _ in range(self.factors["number_queues"])]
 
-        # keep track of time entered for all customers in queue
-        time_entered = [deque() for _ in range(self.factors["number_queues"])]
 
         if self.factors["steady_state_initialization"]:
         # sample initialized queue lengths
@@ -335,10 +329,6 @@ class OpenJackson(Model):
                     completion_times[i] = time_rng[i].expovariate(self.factors["service_mus"][i])
             time_sum_queue_length = [0 for _ in range(self.factors["number_queues"])]
 
-            # initialize time_entered in steady state
-            for i in range(len(queues)):
-                for j in range(max(queues[i]-1,0)):
-                    time_entered[i].append(0)
         else:
             queues = [0 for _ in range(self.factors["number_queues"])]
             # Generate all interarrival, network routes, and service times before the simulation run.
@@ -366,9 +356,6 @@ class OpenJackson(Model):
                 if next_arrival < next_completion: # next event is an arrival
                     station = next_arrivals.index(next_arrival)
                     queues[station] += 1
-                    # record time entered
-                    time_entered[station].append(clock)
-
                     next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
                     if queues[station] == 1:
                         completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
@@ -379,119 +366,72 @@ class OpenJackson(Model):
                         completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
                     else:
                         completion_times[station] = math.inf
-                    
                     # schedule where the customer will go next
                     prob = transition_rng[station].random()
                     
                     if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
                         next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
                         queues[next_station] += 1
-                        # record time entered
-                        time_entered[next_station].append(clock)
                         if queues[next_station] == 1:
-                            time_entered[next_station].popleft()
                             completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
             next_arrivals = [next_arrivals[i] - clock for i in range(self.factors["number_queues"])]
             completion_times = [completion_times[i] - clock for i in range(self.factors["number_queues"])]
-            for i in range(self.factors['number_queues']):
-                for j in range(len(time_entered[i])):
-                    time_entered[i][j] -= clock
             clock = 0
             previous_clock = 0
 
-        # keep track of how many customers have finished service, update when a customer finishes serving
-        num_customers = [-1 for i in range(self.factors["number_queues"])] 
-        # for i in range(self.factors["number_queues"]):
-        #     if queues[i] == 0:
-        #         num_customers[i] = -1
-        # record where each customer is transferred from and their original place in the queue when one is served
-        # update when a new customer is arrived or a customer is transferred
+        # statistics needed for IPA - waiting_record, service_record, arrival_record, transfer_record, IPA_record
+        # waiting_record: records the waiting time of each customer before entering service. record when scheduling new completion times
+            # helper list: time_entered. records the time each customer enters the system. record when scheduling new arrival or departing to another station.
+                                        # pop when scheduling new completion times
+        # service_record: records the service time of each customer. record when scheduling new completion times
+        # arrival_record: records the arrival time of each customer. record when scheduling new arrivals
+        # transfer_record: records where the customer is transferred from, formatted as [previous station, previous index], if new : [-1]
+            # record when scheduling departures & new arrivals
+        # IPA_record: records the customer's index in the queue and the station it is transferred from, each element formatted as [station, index, [previous station, previous index]].
+            # record at shceduling new completion times
+        # collect all statistics starting from warm-up period
+        waiting_record = [[] for _ in range(self.factors["number_queues"])]
+        time_entered = [deque() for _ in range(self.factors['number_queues'])]
+        service_record = [[] for _ in range(self.factors["number_queues"])]
+        arrival_record = [[] for _ in range(self.factors["number_queues"])]
         transfer_record = [deque() for _ in range(self.factors["number_queues"])]
-        for i in range(self.factors["number_queues"]):
-            for j in range(queues[i]):
-                transfer_record[i].append([-1])
-        # record the arrival times of new customers and transferred customers, update when new arrival happens or when transferred
-        arrival_record = [list(time_entered[i]) for i in range(self.factors['number_queues'])]
-
         IPA_record = []
-        # Run simulation over time horizon.
-        while clock < self.factors["t_end"]:
 
+        # Run simulation over time horizon.
+        while clock < self.factors['t_end']:
             next_arrival = min(next_arrivals)
             next_completion = min(completion_times)
-
-            # updated response
             clock = min(next_arrival, next_completion)
-            for i in range(self.factors['number_queues']):
-                time_sum_queue_length[i] += queues[i] * (clock - previous_clock)
-
-            previous_clock = clock
-
-            if next_arrival < next_completion: # next event is an arrival]
+            if next_arrival < next_completion: # next event is an arrival
                 station = next_arrivals.index(next_arrival)
-                # num_customers[station] += 1
-                arrival_record[station].append(clock)
-                transfer_record[station].append([-1])
                 queues[station] += 1
-                # record time entered
-                time_entered[station].append(clock)
-                # record transfer
-                # transfer_record[station].append([-1])
-
                 next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
+
+                time_entered[station].append(clock)
                 if queues[station] == 1:
-                    num_customers[station] += 1
-                    # record waiting time and remove element from time entered
-                    waiting_times[station].append(clock - time_entered[station].popleft())
                     completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
-                    # record service time
-                    service_times[station].append(completion_times[station] - clock)
-                    IPA_record.append([station, num_customers[station], transfer_record[station].popleft()])
+                    waiting_record[station].append(clock - time_entered[station].popleft())
             else: # next event is a departure
-
                 station = completion_times.index(next_completion)
-                # num_customers[station] += 1
                 queues[station] -= 1
-
-
-                # record the customer's index in the queue and the station it is transferred from, formatted as [station, index, transfer_from]
-                # transfer = transfer_record[station].popleft()
-                # IPA_record.append([station, num_customers[station], transfer])
-
                 if queues[station] > 0:
-                    num_customers[station] += 1
-                    # record waiting time and remove element from time entered
-                    waiting_times[station].append(clock - time_entered[station].popleft())
                     completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
-                    # record service time
-                    service_times[station].append(completion_times[station] - clock)
-                    IPA_record.append([station, num_customers[station], transfer_record[station].popleft()])
+                    waiting_record[station].append(clock - time_entered[station].popleft())
                 else:
                     completion_times[station] = math.inf
-                
                 # schedule where the customer will go next
-                prob = transition_rng[station].uniform(0,1)
+                prob = transition_rng[station].random()
                 
                 if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
                     next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
                     queues[next_station] += 1
-                    arrival_record[next_station].append(clock)
-                    if num_customers[station] == -1:
-                        transfer_record[next_station].append([-1])
-                    else:
-                        transfer_record[next_station].append([station, num_customers[station]])
-                    # record time entered
-                    time_entered[next_station].append(clock)
+                    time_entered[next_arrival].append(clock)
                     if queues[next_station] == 1:
-                        num_customers[next_station] += 1
-                        # record waiting time and remove element from time_entered
-                        waiting_times[next_station].append(clock - time_entered[next_station].popleft())
                         completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
-                        # record service time
-                        service_times[next_station].append(completion_times[next_station] - clock)
-                        IPA_record.append([next_station, num_customers[next_station], transfer_record[next_station].popleft()])
+                        waiting_record[next_station].append(clock - time_entered[next_station].popleft())
 
                 
+        
         # end of simulation
 
 
@@ -510,7 +450,7 @@ class OpenJackson(Model):
         lagrange_grad = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(2) + 1 for i in range(self.factors['number_queues'])]
 
         responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
-                      "total_jobs": sum(average_queue_length), 'waiting_times': waiting_times, 'service_times': service_times,
+                      "total_jobs": sum(average_queue_length), 'waiting_times': waiting_record, 'service_times': service_record,
                       "arrival_record": arrival_record, "transfer_record": transfer_record, 'IPA_record': IPA_record}
         # responses = {"average_queue_length": average_queue_length}
         # responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
