@@ -3,7 +3,8 @@ Summary
 -------
 Simulate an open jackson network 
 """
-import autograd.numpy as np
+# import autograd.numpy as np
+import numpy as np
 import math as math
 from collections import deque
 from ..auto_diff_util import bi_dict, replicate_wrapper, factor_dict, resp_dict_to_array
@@ -96,26 +97,26 @@ class OpenJackson(Model):
             "arrival_alphas": {
                 "description": "The arrival rates to each queue from outside the network",
                 "datatype": tuple,
-                "default": (2,3,2,4,3)
+                "default": (2,3,2,3,3)
             },
             "service_mus": {
                 "description": "The mu values for the exponential service times ",
                 "datatype": tuple,
-                "default": (11,11,11,11,11)
+                "default": (12,12,12,12,12)
             },
             "routing_matrix": {
                 "description": "The routing matrix that describes the probabilities of moving to the next queue after leaving the current one",
                 "datatype": list,
-                "default": [[0.1, 0.1, 0.2, 0.2, 0],
-                            [0.1, 0.1, 0.2, 0.2, 0],
-                            [0.2, 0.1, 0, 0.1, 0.2],
-                            [0.1, 0.1, 0.1, 0, 0.2],
-                            [0.1, 0.1, 0.1, 0.1, 0.2]]
+                "default": [[0.1, 0.1, 0.2, 0.2, 0.2],
+                            [0.2, 0.15, 0.2, 0.15, 0.1],
+                            [0.2, 0.1, 0.15, 0.15, 0.1],
+                            [0.15, 0.2, 0.1, 0.1, 0.15],
+                            [0.15, 0.2, 0.1, 0.15, 0.2]]
             },
             "t_end": {
                 "description": "A number of replications to run",
                 "datatype": int,
-                "default": 500
+                "default": 10000
             },
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
@@ -226,6 +227,63 @@ class OpenJackson(Model):
             
 
         return
+    
+    def I(self, x, k):
+        if x==k:
+            return 1
+        else:
+            return 0
+    
+    def get_IPA(self, Dl, V, W, q, k, mu):  # D is the dictionary, St L[i][1]: ith arrive cust's 
+        IA, IW = [[] for i in range(q)], [[-V[i][0]/mu * self.I(i, k)] for i in range(q)]
+        for i in range(len(Dl)):
+            # print('num', i)
+            queue = int(Dl[i][0])
+            idx = Dl[i][1]
+            # print(idx, len(V[queue]))
+            v = V[queue][idx]
+            if idx == 0:
+                if Dl[i][2][0] == -1:
+                    IA[queue].append(0)
+                else:
+                    pre_queue = Dl[i][2][0] 
+                    pre_idx = Dl[i][2][1]
+                    # print('i: ', i, ', prequeue: ', pre_queue, ', pre_idx: ', pre_idx)
+                    if len(IA[pre_queue]) == 0:   # Warm up bug..
+                        # print('warmup')
+                        a = 0
+                    else:
+                        # print(pre_queue, pre_idx)
+                        # print(IW[pre_queue], IA[pre_queue])
+                        a = IW[pre_queue][pre_idx] + IA[pre_queue][pre_idx]
+                    IA[queue].append(a)
+            else:
+                # Calculate IA
+                if Dl[i][2][0] == -1:
+                    IA[queue].append(0)
+                else:
+                    pre_queue = Dl[i][2][0] 
+                    pre_idx = Dl[i][2][1]
+                    # print(pre_queue, pre_idx, IW[pre_queue], IA[pre_queue])
+                    # if len(IA[pre_queue]) == 0:   # Warm up bug..
+                    #     # print('warmup')
+                    #     a = 0
+                    # else: 
+                    # print('i: ', i, ', prequeue: ', pre_queue, ', pre_idx: ', pre_idx)
+                    # print(len(IW[pre_queue]), len(IA[pre_queue]))
+                    a = IW[pre_queue][pre_idx] + IA[pre_queue][pre_idx]
+                    IA[queue].append(a)
+                if W[queue][idx] <= 0:
+                    v = -V[queue][idx]/mu * self.I(queue, k)
+                    IW[queue].append(v)
+                else:
+                    v = -V[queue][idx]/mu * self.I(queue, k) + IW[queue][idx-1] #- V[queue][idx-1]/mu * self.I(queue, k)
+                    # print('pre: ', IA[queue][idx-1])
+                    # print('it: ', IA[queue][idx])
+                    u = IA[queue][idx-1] - IA[queue][idx]
+                    IW[queue].append(u + v)
+        
+        return IW
 
 
     def replicate(self, rng_list):
@@ -261,6 +319,7 @@ class OpenJackson(Model):
         rho = lambdas/self.factors["service_mus"]
         #calculate expected value of queue length as rho/(1-rho)
         expected_queue_length = (rho)/(1-rho)
+        # print("expected queue length: ", expected_queue_length)
 
         # keep track of waiting time for all customers
         waiting_times = [[] for _ in range(self.factors["number_queues"])]
@@ -270,6 +329,8 @@ class OpenJackson(Model):
 
         # keep track of time entered for all customers in queue
         time_entered = [deque() for _ in range(self.factors["number_queues"])]
+        
+        IPA = [[] for _ in range(self.factors['number_queues'])]
 
         if self.factors["steady_state_initialization"]:
         # sample initialized queue lengths
@@ -303,6 +364,15 @@ class OpenJackson(Model):
         # Initiate clock variables for statistics tracking and event handling.
         clock = 0
         previous_clock = 0
+        # num_customers = [-1 for i in range(self.factors["number_queues"])] 
+        # transfer_record = [deque() for _ in range(self.factors["number_queues"])]
+        # for i in range(self.factors["number_queues"]):
+        #     for j in range(queues[i]):
+        #         transfer_record[i].append([-1])
+        # # record the arrival times of new customers and transferred customers, update when new arrival happens or when transferred
+        # arrival_record = [list(time_entered[i]) for i in range(self.factors['number_queues'])]
+
+        # IPA_record = []
         
         # warm-up period
         if not self.factors["steady_state_initialization"]:
@@ -320,6 +390,7 @@ class OpenJackson(Model):
                     next_arrivals[station] += arrival_rng[station].expovariate(self.factors["arrival_alphas"][station])
                     if queues[station] == 1:
                         completion_times[station] = clock + time_rng[station].expovariate(self.factors["service_mus"][station])
+
                 else: # next event is a departure
                     station = completion_times.index(next_completion)
                     queues[station] -= 1
@@ -339,6 +410,7 @@ class OpenJackson(Model):
                         time_entered[next_station].append(clock)
                         if queues[next_station] == 1:
                             completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
+                            
             next_arrivals = [next_arrivals[i] - clock for i in range(self.factors["number_queues"])]
             completion_times = [completion_times[i] - clock for i in range(self.factors["number_queues"])]
             for i in range(self.factors['number_queues']):
@@ -349,11 +421,12 @@ class OpenJackson(Model):
 
         # keep track of how many customers have finished service, update when a customer finishes serving
         num_customers = [-1 for i in range(self.factors["number_queues"])] 
-        # for i in range(self.factors["number_queues"]):
-        #     if queues[i] == 0:
-        #         num_customers[i] = -1
+        for i in range(self.factors["number_queues"]):
+            if queues[i] == 0:
+                num_customers[i] = -1
         # record where each customer is transferred from and their original place in the queue when one is served
         # update when a new customer is arrived or a customer is transferred
+
         transfer_record = [deque() for _ in range(self.factors["number_queues"])]
         for i in range(self.factors["number_queues"]):
             for j in range(queues[i]):
@@ -442,17 +515,26 @@ class OpenJackson(Model):
 
                 
         # end of simulation
-
+        # Calculate IPA:
+        for j in range(self.factors["number_queues"]):
+            ipa = self.get_IPA(IPA_record, service_times, waiting_times, self.factors["number_queues"], j, self.factors["service_mus"][j])
+            num = np.sum([np.sum(ipa[i]) for i in range(len(ipa))])
+            IPA[j].append(num/(self.factors["t_end"]))
+            # for k in range(self.factors["number_queues"]):
+            #     # IPA[k].append(np.sum(ipa[k]))
+            #     IPA[k].append(np.sum(ipa[k])/(self.factors["t_end"]))
+        # print('lambda: ', lambdas)
         # calculate average queue length
         average_queue_length = [time_sum_queue_length[i]/clock for i in range(self.factors["number_queues"])]
-        gradient = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(2) for i in range(self.factors['number_queues'])]
+        # gradient = [-1/(self.factors["service_mus"][i] - lambdas[i])**2 for i in range(self.factors['number_queues'])]
+        gradient = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**2 for i in range(self.factors['number_queues'])]
         # lagrange_obj = sum(lambdas[i]/(self.factors["service_mus"][i] - lambdas[i]) for i in range(self.factors['number_queues'])) + 0.5*sum(self.factors['service_mus'])
         lagrange_obj = sum(average_queue_length) + 0.5*sum(self.factors['service_mus'])
         lagrange_grad = [-lambdas[i]/(self.factors["service_mus"][i] - lambdas[i])**(2) + 1 for i in range(self.factors['number_queues'])]
 
         responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
                       "total_jobs": sum(average_queue_length), 'waiting_times': waiting_times, 'service_times': service_times,
-                      "arrival_record": arrival_record, "transfer_record": transfer_record, 'IPA_record': IPA_record}
+                      "arrival_record": arrival_record, "transfer_record": transfer_record, 'IPA_record': IPA_record, 'IPA': IPA}
         # responses = {"average_queue_length": average_queue_length, 'lagrange_obj': lagrange_obj, "expected_queue_length" :expected_queue_length,
         #               "total_jobs": sum(average_queue_length)}
         gradients = {response_key: {factor_key: np.nan for factor_key in self.specifications} for response_key in responses}
