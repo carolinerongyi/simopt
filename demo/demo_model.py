@@ -43,7 +43,7 @@ sys.path.insert(0, "C:\\Users\\hagen\\colab_simopt\\simopt")
 # mymodel = OpenJackson(fixed_factors)
 # # -----------------------------------------------
 
-from simopt.models.openjackson6auto import OpenJackson
+from simopt.models.openjackson6 import OpenJackson
 # fixed_factors = {"lambda": 3.0, "mu": 8.0}
 fixed_factors = {'steady_state_initialization': False, 'warm_up': 0}
 mymodel = OpenJackson()
