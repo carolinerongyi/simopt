@@ -16,6 +16,7 @@ from .solvers.frankwolfe import FrankWolfe
 from .solvers.pgd import PGD
 from .solvers.Boom_FrankWolfe import BoomFrankWolfe
 from .solvers.Boom_ProxGD import BoomProxGD
+from .solvers.gasso import GASSO
 # import models and problems
 from .models.example import ExampleModel, ExampleProblem
 from .models.cntnv import CntNV, CntNVMaxProfit
@@ -51,7 +52,8 @@ solver_directory = {
     "FRANKWOLFE": FrankWolfe,
     "PGD": PGD,
     "BOOM-FW" : BoomFrankWolfe,
-    "BOOM-PGD" : BoomProxGD
+    "BOOM-PGD" : BoomProxGD,
+    "GASSO": GASSO
 }
 
 solver_unabbreviated_directory = {
@@ -65,7 +67,8 @@ solver_unabbreviated_directory = {
     "FRANKWOLFE ()": FrankWolfe,
     "PGD ()": PGD,
     "BOOM-FrankWolfe ()" : BoomFrankWolfe,
-    "BOOM-ProxGD ()" : BoomProxGD
+    "BOOM-ProxGD ()" : BoomProxGD,
+    "GASSO ()": GASSO,
 }
 
 problem_directory = {
