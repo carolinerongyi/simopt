@@ -140,39 +140,57 @@ class GASSO(Solver):
     def check_MaxNumSoln(self):
         return self.factors["MaxNumSoln"] > 0
     
+    def get_random_sols(self, problem, n, rand_sol_rng):
+        lbs, ubs = problem.lower_bounds, problem.upper_bounds
+        xs = []
+        for j in range(n):
+            x = []
+            for i in range(problem.dim):
+                x.append(rand_sol_rng.uniform(lbs[i], ubs[i]))
+            xs.append(tuple(x))
+        
+        return xs
+   
     def solve(self, problem): # Initialize
         dim = problem.dim
-        Ancalls = np.zeros(MaxNumSoln)
-        A = np.zeros(MaxNumSoln, dim)
-        AFnMean = np.zeros(MaxNumSoln)
-        AFnVar = np.zeros(MaxNumSoln)
+        # Ancalls = np.zeros(MaxNumSoln)
+        # A = np.zeros(MaxNumSoln, dim)
+        # AFnMean = np.zeros(MaxNumSoln)
+        # AFnVar = np.zeros(MaxNumSoln)
         
-        A = problem.factors["initial_solution"]
-        AFnMean[0] = None
-        AFnVar[0] = None
+        # A = problem.factors["initial_solution"]
+        # AFnMean[0] = None
+        # AFnVar[0] = None
 
-        mu_k = np.mean(problem.factors["initial_solution"])
-        var_k = np.var(problem.factors["initial_solution"])
+        rand_sol_rng = self.rng_list[0]
+        x_ini = self.get_random_sols(problem, 20, rand_sol_rng)
+        x_ini.append(problem.factors["initial_solution"])
+
+        mu_k = np.mean(x_ini, axis = 0)  # SHould be the mean for each dim!!!
+        var_k = np.var(x_ini, axis = 0)  # Currently this is 0!!! --> should be a vector!!! var for each dim
         theta1_k = mu_k/var_k
         theta2_k = -0.5 * np.ones(problem.dim) / var_k
-        theta_k = np.vstack((theta1_k, theta2_k )) ######
+        # Append theta1_k to the ahead of theta2_k
+        theta_k = np.append(theta1_k, theta2_k)
+        # theta_k = np.vstack((theta1_k, theta2_k)) ######
         N = int(50 * np.sqrt(dim))
-        K = np.floor(problem.factors['budget']/(N * self.factors['M']))
+        K = int(np.floor(problem.factors['budget']/(N * self.factors['M'])))
         MaxNumSoln = K + 2
         
         recommended_solns = []
         intermediate_budgets = []
         expended_budget = 0
         # Designate random number generator for random sampling.
-        find_next_soln_rng = self.rng_list[0]
+        find_next_soln_rng = self.rng_list[1]
         
         # Get random solutions from normal distribution (truncated)
-        x = np.zeros(N, dim)
+        x = np.zeros((N, dim))
         kk = 0
         while kk < N:
-            X_k = find_next_soln_rng.random(N, dim) * np.diag(np.sqrt(var_k)) + np.ones(N, 1) * mu_k
+            normal_vec = np.array([find_next_soln_rng.normalvariate() for i in range(N * dim)]).reshape((N,dim))
+            X_k = np.multiply(normal_vec, np.sqrt(var_k)) + np.ones((N, dim)) * mu_k  ## If bug, double check
             for i in range(N):
-                if all(X_k[i, :] >= problem.lb) and all(X_k[i, :] <= problem.ub) and kk < N:
+                if all(X_k[i, :] >= problem.lower_bounds) and all(X_k[i, :] <= problem.upper_bounds) and kk < N:
                     x[kk, :] = X_k[i, :]
                     kk += 1
         X_k = x
@@ -184,58 +202,63 @@ class GASSO(Solver):
         # expended_budget += self.factors['M']
         # best_solution = new_solution
 
-        Hbar = np.zeors(K)
-        xbar = np.zeros(K, dim)
+        Hbar = np.zeros(K)
+        xbar = np.zeros((K, dim))
         hvar = np.zeros(K)
         Ntotal = 0
         k = 0
 
         # Sequentially generate random solutions and simulate them.
-        while expended_budget < problem.factors['budget']:
+        while expended_budget < problem.factors['budget'] and k < K:
             # Iterations
             # while k <= K:
-            X_k = new_solution.x
+            # X_k = new_solution.x
             alpha_k = self.factors['alpha_0'] / (k + self.factors['alpha_c']) ** self.factors['alpha_p']
             H = np.zeros(N)
             H_var = np.zeros(N)
             for i in range(N):
                 new_solution = self.create_new_solution(X_k[i, :], problem)
-                intermediate_budgets.append(expended_budget)
+                X_k[i, :] = new_solution.x
+                # intermediate_budgets.append(expended_budget)
                 problem.simulate(new_solution, self.factors['M'])
                 expended_budget += self.factors['M']
                 # best_solution = new_solution
                 H[i] = problem.minmax * new_solution.objectives_mean
-                H_var = 3#################
+                H_var[i] = np.var(new_solution.objectives)
             # new_solution = np.mean(X_k, axis = 0)
             # recommended_solns.append(new_solution)
             Hbar[k], idx = np.max(H), np.argmax(H)
             hvar[k] = H_var[idx]
             xbar[k, :] = X_k[idx, :]
             new_solution = X_k[idx, :]
+            new_solution = self.create_new_solution(tuple(new_solution), problem)
             recommended_solns.append(new_solution)
+            intermediate_budgets.append(expended_budget)
 
             if k >= 1:
                 if Hbar[k] < Hbar[k-1] and Hbar[k] != None:
                     Hbar[k] = Hbar[k-1]
                     xbar[k, :] = xbar[k-1, :]
                     hvar[k] = hvar[k-1]
-                    best_solution = xbar[k-1, :]
-                    recommended_solns[-1] = xbar[k-1, :]
+                    best_solution = self.create_new_solution(tuple(xbar[k-1, :]), problem)
+                    recommended_solns[-1] = best_solution # xbar[k-1, :]
             
             # Shape function
             G_sort = np.sort(H)[::-1]
-            gm = G_sort[np.ceil(N * self.factors['rho'])]
+            gm = G_sort[int(np.ceil(N * self.factors['rho']))]
             S_theta = H > gm
 
             # Estimate gradient and hessian
             w_k = S_theta/sum(S_theta)
-            CX_k = np.vstack((X_k, X_k * X_k)).T  #element wise product
-            grad_k = np.matmul(w_k.T, CX_k) - np.vstack((mu_k, var_k + mu_k * mu_k)).T # [mu_k, var_k + mu_k * mu_k]
-            Hes_k = -np.cov(CX_k, rowvar=False)
-            Hes_k_inv = np.linalg.inv(Hes_k + 1e-8 * np.eye(2*dim)) @ np.diag(np.ones(2*dim))
-
+            CX_k = np.vstack((np.sum(X_k, axis = 0), np.sum(X_k * X_k, axis = 0))).T  #element wise product
+            # print(np.vstack((mu_k, var_k + mu_k * mu_k)).shape)
+            # grad_k = np.matmul(w_k.T, CX_k.T) - np.vstack((mu_k, var_k + mu_k * mu_k)).T # [mu_k, var_k + mu_k * mu_k]
+            grad_k = np.vstack((w_k @ X_k, w_k @ (X_k * X_k))).T - np.vstack((mu_k, var_k + mu_k * mu_k)).T
+            # Hes_k = -np.cov(CX_k, rowvar=False)
+            Hes_k = -np.cov(CX_k)
+            Hes_k_inv = np.linalg.inv(Hes_k + 1e-5 * np.eye(dim)) @ np.diag(np.ones(dim))
             # Update the parameter using an SA iteration
-            theta_k -= alpha_k * (Hes_k_inv @ grad_k.T).T #######
+            theta_k -= (alpha_k * (Hes_k_inv @ grad_k)).reshape(1, -1)[0] #######
             theta1_k = theta_k[:dim]
             theta2_k = theta_k[dim: 2 * dim]
             var_k = -0.5/theta2_k
@@ -243,21 +266,22 @@ class GASSO(Solver):
 
             # Project mu_k and var_k to feasible parameter space
             for i in range(dim):
-                if mu_k[i] < problem.lb:
-                    mu_k[i] = problem.lb
-                if mu_k[i] > problem.ub:
-                    mu_k[i] = problem.ub
+                if mu_k[i] < problem.lower_bounds[i]:
+                    mu_k[i] = problem.lower_bounds[i]
+                if mu_k[i] > problem.upper_bounds[i]:
+                    mu_k[i] = problem.upper_bounds[i]
             var_k = abs(var_k)
 
             # Set the stream for generating random candidate solutions
 
             # Generate candidate solutions from the normal distribution
-            x = np.zeros(N, dim)
+            x = np.zeros((N, dim))
             kk = 0
             while kk < N:
-                X_k = find_next_soln_rng.random(N, dim) * np.diag(np.sqrt(var_k)) + np.ones(N, 1) * mu_k
+                normal_vec = np.array([find_next_soln_rng.normalvariate() for i in range(N * dim)]).reshape((N,dim))
+                X_k = np.multiply(normal_vec, np.sqrt(var_k)) + np.ones((N, dim)) * mu_k
                 for i in range(N):
-                    if all(X_k[i, :] >= problem.lb) and all(X_k[i, :] <= problem.ub) and kk < N:
+                    if all(X_k[i, :] >= problem.lower_bounds) and all(X_k[i, :] <= problem.upper_bounds) and kk < N:
                         x[kk, :] = X_k[i, :]
                         kk += 1
             k += 1
