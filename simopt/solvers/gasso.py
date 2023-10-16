@@ -163,7 +163,8 @@ class GASSO(Solver):
         # AFnVar[0] = None
 
         rand_sol_rng = self.rng_list[0]
-        x_ini = self.get_random_sols(problem, 20, rand_sol_rng)
+        x_ini = [problem.get_random_solution(rand_sol_rng) for i in range(19)]
+        # x_ini = self.get_random_sols(problem, 20, rand_sol_rng)
         x_ini.append(problem.factors["initial_solution"])
 
         mu_k = np.mean(x_ini, axis = 0)  # SHould be the mean for each dim!!!
@@ -223,25 +224,29 @@ class GASSO(Solver):
                 problem.simulate(new_solution, self.factors['M'])
                 expended_budget += self.factors['M']
                 # best_solution = new_solution
-                H[i] = problem.minmax * new_solution.objectives_mean
+                H[i] = problem.minmax * new_solution.objectives_mean  ####
+                # H[i] = np.dot(-1, problem.minmax) * new_solution.objectives_mean
                 H_var[i] = np.var(new_solution.objectives)
             # new_solution = np.mean(X_k, axis = 0)
             # recommended_solns.append(new_solution)
             Hbar[k], idx = np.max(H), np.argmax(H)
+            # Hbar[k], idx = np.min(H), np.argmin(H)  #######
             hvar[k] = H_var[idx]
             xbar[k, :] = X_k[idx, :]
             new_solution = X_k[idx, :]
-            new_solution = self.create_new_solution(tuple(new_solution), problem)
-            recommended_solns.append(new_solution)
-            intermediate_budgets.append(expended_budget)
+            # new_solution = self.create_new_solution(tuple(new_solution), problem) ###1
+            new_solution = self.create_new_solution(tuple(xbar[k, :]), problem) ###1
+            recommended_solns.append(new_solution) ###1
+            intermediate_budgets.append(expended_budget) ###1
 
             if k >= 1:
-                if Hbar[k] < Hbar[k-1] and Hbar[k] != None:
+                if Hbar[k] < Hbar[k-1] and Hbar[k] != None:  ###<
                     Hbar[k] = Hbar[k-1]
                     xbar[k, :] = xbar[k-1, :]
                     hvar[k] = hvar[k-1]
-                    best_solution = self.create_new_solution(tuple(xbar[k-1, :]), problem)
-                    recommended_solns[-1] = best_solution # xbar[k-1, :]
+                    new_solution = xbar[k, :]
+                    # best_solution = self.create_new_solution(tuple(xbar[k-1, :]), problem) ###1
+                    # recommended_solns[-1] = best_solution # xbar[k-1, :]  ###1
             
             # Shape function
             G_sort = np.sort(H)[::-1]
