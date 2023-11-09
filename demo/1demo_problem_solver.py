@@ -19,7 +19,7 @@ from mrg32k3a.mrg32k3a import MRG32k3a
 # Specify the names of the solver and problem to test.
 
 # -----------------------------------------------
-solver_name = "RNDSRCH"  # Random search solver
+solver_name = "BOOM-FW"  # Random search solver
 problem_name = "OPENJACKSON-1"   #"SAN-1"
 # -----------------------------------------------
 

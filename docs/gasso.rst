@@ -3,11 +3,11 @@ Solver: Gradient-Based Adaptive Stochastic Search for Simulation Optimization Ov
 
 Description:
 ------------
-The solver iteratively generate population of candidate solutions from a sample distribution,
-and use the performance of sample distribution to update the sampling dsitribution. 
+The solver iteratively generates population of candidate solutions from a sample distribution,
+and uses the performance of sample distribution to update the sampling dsitribution. 
 GASSO has two stages in each iteration: 
-stage I generate candidate solutions from some exponential family of distribution, and the 
-stage II evaluate candidate solutions, and update the parameter of sampling distribution via 
+1. Stage I: Generate candidate solutions from some exponential family of distribution, and the 
+2. Stage II: Evaluate candidate solutions, and update the parameter of sampling distribution via 
 direct gradient search. 
 
 Scope:
