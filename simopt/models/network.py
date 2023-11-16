@@ -162,7 +162,9 @@ class Network(Model):
         
     def attach_rng(self, random_rng):
         self.random_rng = random_rng
-        cost_time = random_rng[0].expovariate(200)
+        cost_time = []
+        for i in range(self.factors['n_networks']):
+            cost_time.append(random_rng[0].expovariate(200))
         arrival_rate = random_rng[1].expovariate(0.065)
         self.factors['cost_time'] = cost_time
         self.factors['arrival_rate'] = arrival_rate
