@@ -38,13 +38,16 @@ class Network(Model):
     --------
     base.Model
     """
-    def __init__(self, fixed_factors=None):
+    def __init__(self, fixed_factors=None, random = False):
         if fixed_factors is None:
             fixed_factors = {}
         self.name = "NETWORK"
         self.n_rngs = 3
         self.n_responses = 1
+        self.n_random = 2
+        # random instance factors: cost_time, arrival_rate
         self.factors = fixed_factors
+        self.random = random
         self.specifications = {
             "process_prob": {
                 "description": "probability that a message will go through a particular network i",
@@ -54,7 +57,7 @@ class Network(Model):
             "cost_process": {
                 "description": "message processing cost of network i",
                 "datatype": list,
-                "default": [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6, 1 / 7, 1 / 8, 1 / 9, 1 / 10]
+                "default": [0,0,0,0,0,0,0,0,0,0]
             },
             "cost_time": {
                 "description": "cost for the length of time a message spends in a network i per each unit of time",
@@ -69,22 +72,22 @@ class Network(Model):
             "lower_limits_transit_time": {
                 "description": "lower limits for the triangular distribution for the transit time",
                 "datatype": list,
-                "default": [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5]
+                "default": [0,0,0,0,0,0,0,0,0,0]
             },
             "upper_limits_transit_time": {
                 "description": "upper limits for the triangular distribution for the transit time",
                 "datatype": list,
-                "default": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5]
+                "default": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
             },
             "arrival_rate": {
                 "description": "arrival rate of messages following a Poisson process",
                 "datatype": float,
-                "default": 1.0
+                "default": 7*np.log(10)
             },
             "n_messages": {
                 "description": "number of messages that arrives and needs to be routed",
                 "datatype": int,
-                "default": 1000
+                "default": 10000
             },
             "n_networks": {
                 "description": "number of networks",
@@ -156,6 +159,14 @@ class Network(Model):
             return False
         else:
             return True
+        
+    def attach_rng(self, random_rng):
+        self.random_rng = random_rng
+        cost_time = random_rng[0].expovariate(200)
+        arrival_rate = random_rng[1].expovariate(0.065)
+        self.factors['cost_time'] = cost_time
+        self.factors['arrival_rate'] = arrival_rate
+        return
 
     def replicate(self, rng_list):
         """
@@ -301,12 +312,13 @@ class NetworkMinTotalCost(Problem):
     --------
     base.Problem
     """
-    def __init__(self, name="NETWORK-1", fixed_factors=None, model_fixed_factors=None):
+    def __init__(self, name="NETWORK-1", fixed_factors=None, model_fixed_factors=None, random = False, random_rng = None):
         if fixed_factors is None:
             fixed_factors = {}
         if model_fixed_factors is None:
             model_fixed_factors = {}
         self.name = name
+        self.random = random
         self.n_objectives = 1
         self.n_stochastic_constraints = 0
         self.minmax = (-1,)
@@ -337,9 +349,15 @@ class NetworkMinTotalCost(Problem):
         super().__init__(fixed_factors, model_fixed_factors)
         # Instantiate model with fixed factors and overwritten defaults.
         self.model = Network(self.model_fixed_factors)
+        if random and random_rng:
+            self.model.attach_rng(random_rng)
         self.dim = self.model.factors["n_networks"]
         self.lower_bounds = tuple([0 for _ in range(self.model.factors["n_networks"])])
         self.upper_bounds = tuple([1 for _ in range(self.model.factors["n_networks"])])
+
+    def attach_rngs(self, random_rng):
+        self.random_rng = random_rng
+        return
 
     def vector_to_factor_dict(self, vector):
         """
