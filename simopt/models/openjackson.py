@@ -120,12 +120,12 @@ class OpenJackson(Model):
             "warm_up": {
                 "description": "A number of replications to use as a warm up period",
                 "datatype": int,
-                "default": 100
+                "default": 0
             },
             "steady_state_initialization":{
                 "description": "Whether the model will be initialized with steady state values",
                 "datatype": bool,
-                "default": True
+                "default": False
             },
             "density_p":{
                 "description": "The probability of an edge existing in the graph in the random instance",
@@ -425,7 +425,7 @@ class OpenJackson(Model):
                 if prob < np.cumsum(self.factors['routing_matrix'][station])[-1]: # customer stay in system
                     next_station = np.argmax(np.cumsum(self.factors['routing_matrix'][station]) > prob)
                     queues[next_station] += 1
-                    time_entered[next_arrival].append(clock)
+                    time_entered[next_station].append(clock)
                     if queues[next_station] == 1:
                         completion_times[next_station] = clock + time_rng[next_station].expovariate(self.factors["service_mus"][next_station])
                         waiting_record[next_station].append(clock - time_entered[next_station].popleft())
