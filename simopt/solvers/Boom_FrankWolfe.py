@@ -185,9 +185,12 @@ class BoomFrankWolfe(Solver):
         if((Ci is not None) and (di is not None)):
             #constraints += [Ci@(cur_x + step*d) <= di]
             ratio_val += list((di - Ci@cur_x)/(Ci@d))
-            #print(Ci@d)
-            denom += list([Ci@d])
-        
+            #print("type: ", type(Ci@d))
+            if(type(Ci@d) != float and type(Ci@d) != np.float64 and type(Ci@d) != np.float32):
+                denom += list(Ci@d)
+            else:
+                denom += [Ci@d]
+        #print(denom)
         #print("ratio: ", ratio_val)
         #print("denom: ", denom)
         ratio_val = np.array(ratio_val)
