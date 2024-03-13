@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore")
 from ..base import Solver
 
 
-class ACTIVESET(Solver):
+class ACTIVESET1(Solver):
     """
     The Active Set solver.
 
@@ -49,7 +49,7 @@ class ACTIVESET(Solver):
     --------
     base.Solver
     """
-    def __init__(self, name="ACTIVESET", fixed_factors={}):
+    def __init__(self, name="ACTIVESET-interpolation", fixed_factors={}):
         self.name = name
         self.objective_type = "single"
         self.constraint_type = "deterministic"
@@ -101,10 +101,20 @@ class ACTIVESET(Solver):
                 "datatype": float,
                 "default": 1e-5
             },
-            "line_search_max_iters": {
-                "description": "maximum iterations for line search",
+            "ratio": {
+                "description": "decay ratio in line search",
+                "datatype": float,
+                "default": 0.8
+            },
+            "theta": {
+                "description": "constant in the line search condition",
                 "datatype": int,
-                "default": 40
+                "default": 0.1
+            },
+            "max_step":{
+                "description": "maximum step size",
+                "datatype": int,
+                "default": 1
             }
         }
         self.check_factor_list = {
@@ -116,7 +126,8 @@ class ACTIVESET(Solver):
             "lambda": self.check_lambda,
             "tol": self.check_tol,
             "tol2": self.check_tol2,
-            "finite_diff_step": self.check_finite_diff_step
+            "finite_diff_step": self.check_finite_diff_step,
+            "max_step": self.check_max_step
         }
         super().__init__(fixed_factors)
 
@@ -143,6 +154,9 @@ class ACTIVESET(Solver):
     
     def check_finite_diff_step(self):
         return self.factors["finite_diff_step"] > 0
+    
+    def check_max_step(self):
+        return self.factors["max_step"] >= 0
 
     def solve(self, problem):
         """
@@ -278,16 +292,16 @@ class ACTIVESET(Solver):
                 dir, lmbd, = self.compute_search_direction(acidx, grad, problem, C)
             # If the optimal search direction is 0
             if (np.isclose(np.linalg.norm(dir), 0, rtol=0, atol=tol2)):
-                # print('zero search dir')
+                print('dir: ', dir)
                 # Terminate if Lagrange multipliers of the inequality constraints in the active set are all nonnegative.
                 if unconstr_flag or np.all(lmbd[neq:] >= 0):
-                    # print('break')
+                    print('break')
                     break
                 # Otherwise, drop the inequality constraint in the active set with the most negative Lagrange multiplier.
                 else: 
                     # q = acidx[neq + np.argmin(lmbd[neq:][lmbd[neq:] < 0])]
                     q = acidx[neq + np.argmin(lmbd[neq:])]
-                    # print('q: ', q)
+                    print('q: ', q)
                     acidx.remove(q)
             else:
                 if not unconstr_flag:
@@ -295,14 +309,11 @@ class ACTIVESET(Solver):
                 # If all constraints are feasible.
                 if unconstr_flag or np.all(C[idx,:] @ dir <= 0):
                     # Line search to determine a step_size.
-                    # print('line search 1')
-                    new_solution, step_size, expended_budget, _ = self.line_search(problem, expended_budget, r, grad, new_solution, max_step, dir, alpha, beta)
-                    # print('budget: ', expended_budget)
+                    print('line search 1')
+                    new_solution, step_size, expended_budget, _ = self.line_search(new_solution,grad,dir,max_step,problem,expended_budget)
+                    print('budget: ', expended_budget)
                     # Update maximum step size for the next iteration.
-                    if (step_size == max_step):
-                        max_step = max_step / beta
-                    else:
-                        max_step = step_size
+                    max_step = step_size
 
                 # Ratio test to determine the maximum step size possible
                 else:
@@ -322,32 +333,30 @@ class ACTIVESET(Solver):
                             if s < s_star:
                                 s_star = s
                                 q = r_idx[i]
-                    # If there is no blocking constraint
+                    # If there is no blocking constraint (i.e., s_star >= 1)
                     if s_star >= max_step:
+                        # print('no blocking c')
                         # Line search to determine a step_size.
-                        # print('line search 2')
-                        new_solution, step_size, expended_budget, _ = self.line_search(problem, expended_budget, r, grad, new_solution, max_step, dir, alpha, beta)
-                        # print('budget: ', expended_budget)
-                    # If there can be a blocking constraint
+                        print('line search 2')
+                        new_solution, step_size, expended_budget, _ = self.line_search(new_solution,grad,dir,max_step,problem,expended_budget)
+                        print('budget: ', expended_budget)
+                    # If there is a blocking constraint (i.e., s_star < 1)
                     else:
                         # No need to do line search if s_star is 0.
                         if s_star > 0:
                             # Line search to determine a step_size.
-                            # print('line search 3')
-                            new_solution, step_size, expended_budget, count = self.line_search(problem, expended_budget, r, grad, new_solution, s_star, dir, alpha, beta)
+                            print('line search 3')
+                            new_solution, step_size, expended_budget, _ = self.line_search(new_solution,grad,dir,s_star,problem,expended_budget)
                             if (step_size == s_star) & (q not in acidx):
                                 # Add blocking constraint to the active set.
                                 acidx.append(q)
-                            # print('budget: ', expended_budget)
-                        elif (q not in acidx):
-                            # Add blocking constraint to the active set if s_star =0.
-                            acidx.append(q)
+                            print('budget: ', expended_budget)
             # Append new solution.
             if (problem.minmax[0] * new_solution.objectives_mean > problem.minmax[0] * best_solution.objectives_mean):
                 best_solution = new_solution
                 recommended_solns.append(new_solution)
                 intermediate_budgets.append(expended_budget)
-                # print(problem.minmax[0] * new_solution.objectives_mean)
+                print(problem.minmax[0] * new_solution.objectives_mean)
         return recommended_solns, intermediate_budgets
 
 
@@ -506,68 +515,131 @@ class ACTIVESET(Solver):
                 grad[i] = (fn - fn2) / FnPlusMinus[i, 2]
         budget_spent = (2 * problem.dim - np.sum(BdsCheck != 0)) * r        
         return grad, budget_spent
+    
+    def full_min_quadratic(self, div_a,Fa,Fb,a,b,problem):
+        '''
+        return the minimum point which is the 
+        next step size usig the quadratic 
+        interpolation  with the information q(a),
+        q(b), q'(a) and q'(b) where a < b
+        '''
+        #print("div: ",div_a)
+        #print("Fa,Fb: ", (Fa,Fb))
+        #print("(a,b): ", (a,b))
+        #numerator = (a**2 - b**2)*div_a - 2*a*(Fa - Fb)
+        #denominator = 2*((a-b)*div_a - (Fa - Fb))
+        #result = numerator/denominator
+        A = div_a/(a - b) - (Fa - Fb)/((a-b)**2)
+        B = div_a - 2*A*a
+        result = -B/(2*A)
+        
+        if(-problem.minmax[0] == np.sign(A)):
+            #if A and problem have the same sign, i.e. min and A > 0
+            if(result < a):
+                return a
+            elif(result > b):
+                return b
+            else:
+                return result
+        else:
+            if(problem.minmax[0] > 0):
+                #maximization but A > 0
+                return [a,b][np.argmax([Fa,Fb])]
+              
+            else:
+                #minization but A < 0
+                return [a,b][np.argmin([Fa,Fb])]
+    
+    def quadratic_interpolate(self,x1,x2,div_x1,div_x2,Fx1,Fx2,problem):
+        '''
+        interpolate the quadratic polynomial using given points
+        and return the lowest (arg)point
+        '''
 
-    def line_search(self, problem, expended_budget, r, grad, cur_sol, alpha_0, d, alpha, beta):
+        if(x2 > x1):
+            #we use div_x1,x1,x2
+            #return min_quadratic(div_x1,Fx1,Fx2,x2)
+            return self.full_min_quadratic(div_x1,Fx1,Fx2,x1,x2,problem)
+        else:
+            #we use div_x2,x2,x1
+            #return min_quadratic(div_x2,Fx2,Fx1,x1)
+            return self.full_min_quadratic(div_x2,Fx2,Fx1,x2,x1,problem)
+    
+    def line_search(self,cur_sol,grad,d,max_step,problem,expended_budget):
         """
-        A backtracking line-search along [x, x + rd] assuming all solution on the line are feasible. 
-
-        Arguments
-        ---------
-        problem : Problem object
-            simulation-optimization problem to solve
-        expended_budget: int
-            current expended budget
-        r : int
-            number of replications taken at each solution
-        grad : ndarray
-            objective gradient of cur_sol
-        cur_sol : Solution object
-            current solution
-        alpha_0 : float
-            maximum step size allowed
-        d : ndarray
-            search direction
-        alpha: float
-            tolerance for sufficient decrease condition
-        beta: float
-            step size reduction factor
-
-        Returns
-        -------
-        x_new_solution : Solution
-            a solution obtained by line search
-        step_size : float
-            computed step size
-        expended_budget : int
-            updated expended budget
+        carry out interpolation line search on the function F where we 
+        min F(x + alpha*d) s.t. alpha >=0  where phi(a) = F(x + ad)
         """
-        x = cur_sol.x
-        fx = -1 * problem.minmax[0] * cur_sol.objectives_mean
-        step_size = alpha_0
+        #print("Interpolation LS")
+        r = self.factors["r"]
+        ratio = self.factors["ratio"]
+        sign = -problem.minmax[0]
+        
+        step_size = max_step
+        added_budget = 0
         count = 0
-        x_new_solution = cur_sol
-
-        max_iter = self.factors["line_search_max_iters"]
-
+        
+        cur_x = cur_sol.x
+        curF = -1 * problem.minmax[0] * cur_sol.objectives_mean
+        #print("max_step: ", max_step)
+        if(max_step == 0):
+            return max_step, expended_budget
+        
         while True:
-            if (expended_budget > problem.factors["budget"]) | (count >= max_iter):
-                break
-            x_new = x + step_size * d
-            # Create a solution object for x_new.
-            x_new_solution = self.create_new_solution(tuple(x_new), problem)
-            # Use r simulated observations to estimate the objective value.
-            problem.simulate(x_new_solution, r)
-            expended_budget += r
-            # Check the sufficient decrease condition.
-            f_new = -1 * problem.minmax[0] * x_new_solution.objectives_mean
-            if f_new < fx + alpha * step_size * np.dot(grad, d):
-                break
-            step_size *= beta
+            #print("cur step size: ", step_size)    
+            new_x = cur_x + step_size*d
+            #print("LS new x: ",new_x)
+            new_sol =  self.create_new_solution(tuple(new_x), problem)
+            problem.simulate(new_sol, r)
+            added_budget += r
+            
+            newF = -1 * problem.minmax[0] * new_sol.objectives_mean
+            
+            #sufficient decrease
+            if(newF < curF + self.factors['theta'] * step_size * np.dot(grad, d)):
+                break;
+            
+            #quadratic interpolation using phi(0), phi'(0), phi(step)
+            #new_step_size = ((-grad.dot(d))*(step_size**2))/(2*(newF-curF-step_size*(grad.dot(d))))
+            new_step_size = self.full_min_quadratic(sign*grad.dot(d),sign*curF,sign*newF,0,step_size,problem)
+            #print("grad . d: ", grad.dot(d))
+            #print("opt new step: ", new_step_size)
+            if(abs(new_step_size) >= 1e-4):
+                #if we can make some progress
+                #new_step_size = ((-grad.dot(d))*(step_size**2))/(2*(newF-curF-step_size*(grad.dot(d))))
+                step_size = min(new_step_size,max_step)
+            #elif(new_step_size == 0):
+            #    step_size = 0
+            #    break;
+            else:
+                #if we did not make progress, use the informaiton {step*ratio}
+                temp_x = cur_x + (step_size*ratio)*d
+                temp_sol =  self.create_new_solution(tuple(temp_x), problem)
+                problem.simulate(temp_sol, r)
+                added_budget += r
+                newF = -1 * problem.minmax[0] * temp_sol.objectives_mean
+                #print("another newF: ", newF)
+                #new_step_size = ((-grad.dot(d))*((step_size*ratio)**2))/(2*(newF-curF-(step_size*ratio)*(grad.dot(d))))
+                new_step_size = self.full_min_quadratic(sign*grad.dot(d),sign*curF,sign*newF,0,step_size*ratio,problem)
+                #check if it's in the interval
+                if(new_step_size <= 0): #outside interval (too small)
+                    step_size = 0
+                    break;
+                elif(new_step_size > step_size*ratio): #outside interval (too big)
+                    step_size = step_size*ratio
+                else:
+                    step_size = new_step_size
+                
+            #print("new step: ", step_size)
+            #print("iteration: ", cur_iter)
+            #print("=============")  
             count += 1
-            if count >= 50:
+            if count >= 20:
                 break
-
-        return x_new_solution, step_size, expended_budget, count
+        #print("Inter step: ",step_size)
+        #print("-------end of LS--------")
+        expended_budget += added_budget
+        return new_sol, step_size, expended_budget, count
 
     def find_feasible_initial(self, problem, Ae, Ai, be, bi, tol):
         '''
